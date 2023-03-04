@@ -63,7 +63,7 @@ class Orchestrator(object):
 
 class RobotPathPlanner(object):
 
-    def __init__(self, obstacles, orchestrator: Orchestrator, max_x, max_y, initial_pose, end_pose=(None, None)):
+    def __init__(self, obstacles, orchestrator: Orchestrator, max_x, max_y, initial_pose, end_pose=(None, None), motion_planner=None):
         """
 
         :param set(Tuple) obstacles: set of tuples representing blocked grids
@@ -81,7 +81,7 @@ class RobotPathPlanner(object):
         self.current_pose = initial_pose
         self.end_pose = end_pose
         self.locked_cells = []
-        self.orchestrator = orchestrator # TODO remove this reference if possilbe
+        self.orchestrator = orchestrator  # TODO remove this reference if possible
         self.motion_planner = AStarPlanner() if motion_planner is None else motion_planner
 
     def plan_path(self):
