@@ -8,9 +8,11 @@ from motion_planners import (
 
 
 class Orchestrator(object):
-    def __init__(self, num_robots):
-        self.floor_map = set()
-        self.robots = {}
+    def __init__(self, shelves, size):
+        self.shelves = shelves
+        self.size = size
+        self.robots : dict[str, RobotPathPlanner] = {}
+        self.locked = set()
 
     def add_robot(self, robot_name, initial_pose, end_pose):
         """
@@ -22,12 +24,34 @@ class Orchestrator(object):
         """
         self.robots[robot_name] = RobotPathPlanner(self.floor_map, initial_pose, end_pose)
 
-    def generate_map(self):
-        pass
+    """
+    Execute a move for all of the robots under the orchestrator
+    control. If a collision is detected, replan the path.
+    """
+    def move_all(self):
+        for robotId in self.robots:
+            robot = self.robots[robotId]
+            first, second = robot.get_next_points()
+            max_tries = 5
+            tryidx = 0
+            while self.is_pt_locked(first) or self.is_pt_locked(second):
+                robot.plan_path()
+                first, second = robot.get_next_points()
+                tryidx = tryidx + 1
+                if tryidx >= max_tries:
+                    raise ValueError("couldn't plan a path")
 
-    def plan_it_all(self):
-        # Plan all robot paths
-        pass
+            robot.move_robot()
+
+    def is_done(self):
+        alldone = [self.robots[r].is_done() for r in self.robots]
+        return all(alldone)
+
+    def is_pt_locked(self, pt: tuple[int, int]):
+        if pt is None:
+            return False
+        else:
+            return pt in self.shelves or pt in self.locked
 
     def plan_robot_path(self, robot):
         robot.plan_path()
@@ -39,7 +63,7 @@ class Orchestrator(object):
 
 class RobotPathPlanner(object):
 
-    def __init__(self, floor_map, initial_pose, end_pose=(None, None)):
+    def __init__(self, floor_map, orchestrator: Orchestrator, initial_pose, end_pose=(None, None)):
         """
 
         :param set(Tuple) floor_map: set of tuples representing blocked grids
@@ -50,6 +74,8 @@ class RobotPathPlanner(object):
         self.current_pose = initial_pose
         self.end_pose = end_pose
         self.floor_map = floor_map
+        self.locked_cells = []
+        self.orchestrator = orchestrator
 
     def plan_path(self):
         """
@@ -61,13 +87,32 @@ class RobotPathPlanner(object):
 
     def get_next_points(self):
         # Return next 2 locations in path
-        if self.path:
+        if self.path is None:
+            self.plan_path()
+
+        if (self._path > 1):
             return self.path[0], self.path[1]
+        else:
+            return self._path[0]
 
     def move_robot(self):
         # Strip first element off path
-        if self.path:
-            self.current_pose = self.path.pop(0)
+        if self._path:
+            # set the current pose
+            self.current_pose = self._path.pop(0)
+            # remove the previously locked cells
+            # from the orchestrator
+            for pt in self.locked_cells:
+                self.orchestrator.locked.remove(pt)
+            self.locked_cells.clear()
+            
+            # lock the new cells
+            if len(self._path) > 0:
+                self.locked_cells.append(self._path[0])
+                self.orchestrator.locked.add(self._path[0])
+            if len(self._path) > 1:
+                self.locked_cells.append(self._path[1])
+                self.orchestrator.locked.add(self._path[1])
 
     def update_end_pose(self, end_pose):
         """
@@ -76,6 +121,9 @@ class RobotPathPlanner(object):
         :return:
         """
         self.end_pose = end_pose
+
+    def is_done(self):
+        return self.current_pose == self.end_pose
 
     @property
     def get_current_pose(self):
