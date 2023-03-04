@@ -11,7 +11,7 @@ class Orchestrator(object):
     def __init__(self, shelves, size):
         self.shelves = shelves
         self.size = size
-        self.robots : dict[str, RobotPathPlanner] = {}
+        self.robots: dict[str, RobotPathPlanner] = {}
         self.locked = set()
 
     def add_robot(self, robot_name, initial_pose, end_pose):
