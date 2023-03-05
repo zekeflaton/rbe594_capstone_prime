@@ -13,6 +13,7 @@ class Orchestrator(object):
         self.size = size
         self.robots: dict[str, RobotPathPlanner] = {}
         self.locked = set()
+        self.deadloc_observers = []
 
     def add_robot(self, robot_name, initial_pose, end_pose):
         """
@@ -22,43 +23,82 @@ class Orchestrator(object):
         :param end_pose:
         :return:
         """
-        self.robots[robot_name] = RobotPathPlanner(self.floor_map, initial_pose, end_pose)
+        self.robots[robot_name] = RobotPathPlanner(self.shelves, self, self.size[0], self.size[1], initial_pose, end_pose)
+        self.robots[robot_name].plan_path()
+        first, second = self.robots[robot_name].get_next_two_points()
+        self.lock_cells(self.robots[robot_name], first, second)
+        return self.robots[robot_name]
 
-    """
-    Execute a move for all of the robots under the orchestrator
-    control. If a collision is detected, replan the path.
-    """
+    
     def move_all(self):
-        for robotId in self.robots:
-            robot = self.robots[robotId]
-            first, second = robot.get_next_points()
-            max_tries = 5
-            tryidx = 0
-            while self.is_pt_locked(first) or self.is_pt_locked(second):
-                robot.plan_path()
-                first, second = robot.get_next_points()
-                tryidx = tryidx + 1
-                if tryidx >= max_tries:
-                    raise ValueError("couldn't plan a path")
+        """
+        Execute a move for all of the robots under the orchestrator
+        control. If a collision is detected, replan the path.
+        """
+        robots_to_move = [self.robots[r] for r in self.robots if not self.robots[r].is_done()]
+        for robot in robots_to_move:
+            # unlock reserved pts
+            for pt in robot.locked_cells:
+                self.locked.remove(pt)
+            robot.locked_cells.clear()
 
+            # move the robot to the next pose
             robot.move_robot()
+            # if arrived at goal, we're done!
+            if robot.is_done():
+                continue
+
+            # identify the next two pts we need to
+            # lock for this robot
+            first, second = robot.get_next_two_points()
+
+            # if either is already reserved for another robot
+            # we need to replan the path
+            if self.is_pt_locked(first) or self.is_pt_locked(second):
+                for observer in self.deadloc_observers:
+                    observer.__call__(robot.current_pose)
+                robot.plan_path()
+                first, second = robot.get_next_two_points()
+
+            # once an available path has been found,
+            # reserve the first and second pts for this
+            # robot
+            self.lock_cells(robot, first, second)
+                
+    def lock_cells(self, robot, first, second=None):
+        """
+        
+        This method should only be called from within the orchestrator
+        as a conveinience for locking pts
+        """
+        self.locked.add(first)
+        robot.locked_cells.append(first)
+        if second is not None:
+            self.locked.add(second)
+            robot.locked_cells.append(second)
+
 
     def is_done(self):
+        '''Test if the current pose matches the goal pose'''
         alldone = [self.robots[r].is_done() for r in self.robots]
         return all(alldone)
 
+
     def is_pt_locked(self, pt: tuple[int, int]):
+        '''Test if a pt is either a shelf or reserved for a robot'''
         if pt is None:
             return False
         else:
             return pt in self.shelves or pt in self.locked
+        
+    def subscribe_to_deadlock(self, func):
+        '''Call the assigned func when a deadlock is detected.
+        The func will recieve the current pose of the robot being
+        replanned.'''
+        self.deadloc_observers.append(func)
 
-    def plan_robot_path(self, robot):
-        robot.plan_path()
-
-    def advance_all_robots(self):
-        # Check all robots next 2 locations and look for any collisions
-        pass
+    def unsubscribe_to_deadlock(self, func):
+        self.deadloc_observers.remove(func)
 
 
 class RobotPathPlanner(object):
@@ -83,6 +123,7 @@ class RobotPathPlanner(object):
         self.locked_cells = []
         self.orchestrator = orchestrator  # TODO remove this reference if possible
         self.motion_planner = AStarPlanner() if motion_planner is None else motion_planner
+        self.observers = []
 
     def plan_path(self):
         """
@@ -98,6 +139,8 @@ class RobotPathPlanner(object):
             nodes_visited += 1
             if x == self.end_pose:  # If we're at the goal, we're done
                 self._path = self.backtrace(parent_dict)
+                # pop the first pt because we're already there!
+                self._path.pop(0)
                 return True
 
             # Iterate over all possible locations we could move to from our current location
@@ -126,7 +169,7 @@ class RobotPathPlanner(object):
             (x[0], x[1] - 1),
         ]
         for x, y in coordinates:
-            if self.is_cord_inbounds(x, y) and not self.is_cord_blocked_by_obstacle(x, y):
+            if self.is_cord_inbounds(x, y) and (not self.orchestrator.is_pt_locked((x, y)) or (x,y) == self.end_pose):
                 all_possible_actions.append(((x, y), motion_planner.cost(x, y, self.end_pose[0], self.end_pose[1])))
         return all_possible_actions
 
@@ -157,32 +200,23 @@ class RobotPathPlanner(object):
             self.plan_path()
 
         if len(self._path) > 1:
-            return self.path[0], self.path[1]
+            return self._path[0], self._path[1]
         elif len(self._path) == 1:
-            return self._path[0]
+            return self._path[0], None
         else:
             print("We should never get here")
             return None
 
     def move_robot(self):
-        # Strip first element off path
-        if self._path:
-            # set the current pose
-            self.current_pose = self._path.pop(0)
-            # remove the previously locked cells
-            # from the orchestrator
-            for pt in self.locked_cells:
-                self.orchestrator.locked.remove(pt)
-            self.locked_cells.clear()
+        self.current_pose = self._path.pop(0)
+        for observer in self.observers:
+            observer.__call__(self.current_pose)
 
-            # lock the new cells
-            # TODO: clean this up to remove orch reference and pass new locked cells back up
-            if len(self._path) > 0:
-                self.locked_cells.append(self._path[0])
-                self.orchestrator.locked.add(self._path[0])
-            if len(self._path) > 1:
-                self.locked_cells.append(self._path[1])
-                self.orchestrator.locked.add(self._path[1])
+    def subscribe_to_movement(self, func):
+        self.observers.append(func)
+
+    def unsubscribe_from_movement(self, func):
+        self.observers.remove(func)
 
     def update_end_pose(self, end_pose):
         """
@@ -209,6 +243,3 @@ class RobotPathPlanner(object):
         path.reverse()
         return path
 
-
-if __name__ == '__main__':
-    run_script()
