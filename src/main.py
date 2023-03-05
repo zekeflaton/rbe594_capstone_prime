@@ -3,7 +3,7 @@ import numpy as np
 from obstacle_field_motion_planning import Orchestrator
 
 # load png map
-png_map = Image.open('foo.png')
+png_map = Image.open('../foo.png')
 ary_map = np.array(png_map)
 shelves = set()
 # set the number of robots to place
@@ -64,3 +64,5 @@ while not orchestrator.is_done():
 # save the result jpg
 resultpng = Image.fromarray(ary_map)
 resultpng.save('result.png')
+result_resized = resultpng.resize((600, 600), Image.NEAREST)
+result_resized.save('result_resized.png')
