@@ -1,6 +1,9 @@
 from PIL import Image
 import numpy as np
-from obstacle_field_motion_planning import Orchestrator
+from obstacle_field_motion_planning import (
+    Orchestrator,
+    get_point_from_pose
+)
 
 # load png map
 png_map = Image.open('../foo.png')
@@ -19,15 +22,15 @@ size = ary_map.shape
 # n shelves encountered as goal poses
 for i in range(ary_map.shape[0]):
     for j in range(ary_map.shape[1]):
-        px = sum(ary_map[i,j])
+        px = sum(ary_map[i, j])
         if px == 0:
-            shelves.add((i,j))
+            shelves.add((i, j))
             if len(goals) < num_of_robots:
-                goals.append((i,j))
+                goals.append((i, j, 0))
 
 # place the robots start poses
 for i in range(0, 10, 2):
-    starts.append((i, 0))
+    starts.append((i, 0, 0))
 
 # This class is just for painting robot
 # paths on the png in different colors
@@ -38,8 +41,14 @@ class Painter:
         ary_map[pt[0], pt[1]] = np.array(self.color)
 
 # print a message when a dead lock is detected
-def deadlock_detected(pt):
-    print('Deadlock detected at ' + str(pt) + ', replanning...')
+def deadlock_detected(robot_name, pose):
+    """
+
+    :param str robot_name: name of the robot
+    :param Tuple(int) pose: (x, y, theta) representing the robot pose
+    :return:
+    """
+    print("Robot {} detected deadlock at {}, replanning...".format(robot_name, get_point_from_pose(pose)))
 
 
 orchestrator = Orchestrator(shelves, size)

@@ -24,12 +24,11 @@ class BaseMotionPlanner(object):
 
 
 class AStarPlanner(BaseMotionPlanner):
-    def initialize(self, x_i, x_g):
+    def initialize(self, current_pose, goal_pose):
         q = queue.PriorityQueue()
-        return super(AStarPlanner, self).initialize(q, x_i, initial_cost=self.cost(x_i[0], x_i[1], x_g[0], x_g[1]))
-        # q.put([, x_i])
-        # list_of_locations = {x_i: True}
-        # return q, list_of_locations
+        return super(AStarPlanner, self).initialize(q, current_pose, initial_cost=self.cost(current_pose, goal_pose))
 
-    def cost(self, x_i, y_i, x_g, y_g, counter=0):
-        return abs(x_i - x_g) + abs(x_i - x_g)
+    def cost(self, current_pose, goal_pose, counter=0):
+        x_current, y_current, theta_current = current_pose
+        x_goal, y_goal, theta_goal = goal_pose
+        return abs(x_current - x_goal) + abs(y_current - y_goal) + abs(theta_current - theta_goal)/90
