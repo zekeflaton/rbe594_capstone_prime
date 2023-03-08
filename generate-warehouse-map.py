@@ -40,10 +40,10 @@ for i in range(num_of_shelf_clusters):
         success = add_shelf()
 
 # generate image
-ary = np.ones(size, dtype='uint8') * 255
+ary = np.ones((size[0], size[1], 3), dtype='uint8') * 255
 for pt in shelves:
-    ary[pt[0],pt[1]] = 0
+    ary[pt[0],pt[1]] = np.array([0,0,0])
 
-foo = im.fromarray(ary, mode='L')
+foo = im.fromarray(ary, mode='RGB')
 foo.save('foo.png')
 
