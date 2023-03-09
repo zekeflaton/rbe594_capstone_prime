@@ -1,109 +1,12 @@
-from time import sleep
-import random
-import queue
-import math
 from motion_planners import (
     AStarPlanner
 )
 
 
-class Orchestrator(object):
-    def __init__(self, shelves, size):
-        self.shelves = shelves
-        self.size = size
-        self.robots: dict[str, RobotPathPlanner] = {}
-        self.locked = set()
-        self.deadloc_observers = []
-
-    def add_robot(self, robot_name, initial_pose, end_pose):
-        """
-
-        :param int/str robot_name:
-        :param initial_pose:
-        :param end_pose:
-        :return:
-        """
-        self.robots[robot_name] = RobotPathPlanner(self.shelves, self, self.size[0], self.size[1], initial_pose, end_pose)
-        self.robots[robot_name].plan_path()
-        first, second = self.robots[robot_name].get_next_two_points()
-        self.lock_cells(self.robots[robot_name], first, second)
-        return self.robots[robot_name]
-
-    
-    def move_all(self):
-        """
-        Execute a move for all of the robots under the orchestrator
-        control. If a collision is detected, replan the path.
-        """
-        robots_to_move = [self.robots[r] for r in self.robots if not self.robots[r].is_done()]
-        for robot in robots_to_move:
-            # unlock reserved pts
-            for pt in robot.locked_cells:
-                self.locked.remove(pt)
-            robot.locked_cells.clear()
-
-            # move the robot to the next pose
-            robot.move_robot()
-            # if arrived at goal, we're done!
-            if robot.is_done():
-                continue
-
-            # identify the next two pts we need to
-            # lock for this robot
-            first, second = robot.get_next_two_points()
-
-            # if either is already reserved for another robot
-            # we need to replan the path
-            if self.is_pt_locked(first) or self.is_pt_locked(second):
-                for observer in self.deadloc_observers:
-                    observer.__call__(robot.current_pose)
-                robot.plan_path()
-                first, second = robot.get_next_two_points()
-
-            # once an available path has been found,
-            # reserve the first and second pts for this
-            # robot
-            self.lock_cells(robot, first, second)
-                
-    def lock_cells(self, robot, first, second=None):
-        """
-        
-        This method should only be called from within the orchestrator
-        as a conveinience for locking pts
-        """
-        self.locked.add(first)
-        robot.locked_cells.append(first)
-        if second is not None:
-            self.locked.add(second)
-            robot.locked_cells.append(second)
-
-
-    def is_done(self):
-        '''Test if the current pose matches the goal pose'''
-        alldone = [self.robots[r].is_done() for r in self.robots]
-        return all(alldone)
-
-
-    def is_pt_locked(self, pt: tuple[int, int]):
-        '''Test if a pt is either a shelf or reserved for a robot'''
-        if pt is None:
-            return False
-        else:
-            return pt in self.shelves or pt in self.locked
-        
-    def subscribe_to_deadlock(self, func):
-        '''Call the assigned func when a deadlock is detected.
-        The func will recieve the current pose of the robot being
-        replanned.'''
-        self.deadloc_observers.append(func)
-
-    def unsubscribe_to_deadlock(self, func):
-        self.deadloc_observers.remove(func)
-
-
 class RobotPathPlanner(object):
 
-    def __init__(self, obstacles, orchestrator: Orchestrator, max_x, max_y, initial_pose, end_pose=(None, None), motion_planner=None):
+    def __init__(self, obstacles, orchestrator, max_x, max_y, initial_pose, end_pose=(None, None),
+                 motion_planner=None):
         """
 
         :param set(Tuple) obstacles: set of tuples representing blocked grids
@@ -152,7 +55,7 @@ class RobotPathPlanner(object):
                 if possible_action not in list_of_locations:
                     parent_dict[possible_action] = x
                     list_of_locations[possible_action] = True
-                    q = self.motion_planner.append_action(q, possible_action, cost=current_cost+cost_of_action)
+                    q = self.motion_planner.append_action(q, possible_action, cost=current_cost + cost_of_action)
 
     def get_all_actions(self, x, motion_planner):
         """
@@ -169,7 +72,7 @@ class RobotPathPlanner(object):
             (x[0], x[1] - 1),
         ]
         for x, y in coordinates:
-            if self.is_cord_inbounds(x, y) and (not self.orchestrator.is_pt_locked((x, y)) or (x,y) == self.end_pose):
+            if self.is_cord_inbounds(x, y) and (not self.orchestrator.is_pt_locked((x, y)) or (x, y) == self.end_pose):
                 all_possible_actions.append(((x, y), motion_planner.cost(x, y, self.end_pose[0], self.end_pose[1])))
         return all_possible_actions
 
