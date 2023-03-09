@@ -1,4 +1,4 @@
-from motion_planners import (
+from src.motion_planners import (
     AStarPlanner
 )
 

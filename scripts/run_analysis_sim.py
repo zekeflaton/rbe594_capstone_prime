@@ -1,16 +1,16 @@
 from PIL import Image
 import numpy as np
-from orchestrator import Orchestrator
+from src.orchestrator import Orchestrator
 from argparse import ArgumentParser
 
 
-def main(num_of_robots):
+def run_analysis_sim(num_of_robots):
     """
     :param int num_of_robots:  Indicates the number of robots to place
     """
 
     # load png map
-    png_map = Image.open('warehouse_map.png')
+    png_map = Image.open('../src/warehouse_map.png')
     ary_map = np.array(png_map)
     shelves = set()
     # num_of_robots = 5
@@ -73,9 +73,7 @@ def main(num_of_robots):
     result_resized = result_png.resize((600, 600), Image.NEAREST)
     result_resized.save('../results/result_resized.png')
     print("Total number of deadlocks: {} with {} robots".format(orchestrator.deadlock_count, num_of_robots))
-    with open("../results/deadlock_analysis.csv", "a") as f:
-        f.write(",".join([str(num_of_robots), str(orchestrator.deadlock_count)]))
-        f.write("\n")
+    return orchestrator.deadlock_count
 
 
 if __name__ == "__main__":
@@ -83,4 +81,4 @@ if __name__ == "__main__":
     parser.add_argument("--num_robots", type=int, default=5)
 
     args = parser.parse_args()
-    main(args.num_robots)
+    run_analysis_sim(args.num_robots)

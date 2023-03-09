@@ -1,4 +1,4 @@
-from robot import RobotPathPlanner
+from src.robot import RobotPathPlanner
 
 
 class Orchestrator(object):
