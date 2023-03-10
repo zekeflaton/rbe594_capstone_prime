@@ -1,4 +1,4 @@
-from src.robot import RobotPathPlanner
+from src.robot import RobotPathPlanner, get_point_from_pose
 
 
 class Orchestrator(object):
@@ -34,7 +34,8 @@ class Orchestrator(object):
         for robot in robots_to_move:
             # unlock reserved pts
             for pt in robot.locked_cells:
-                self.locked.remove(pt)
+                if pt in self.locked:
+                    self.locked.remove(pt)
             robot.locked_cells.clear()
 
             # move the robot to the next pose
@@ -67,11 +68,11 @@ class Orchestrator(object):
         This method should only be called from within the orchestrator
         as a conveinience for locking pts
         """
-        self.locked.add(first)
-        robot.locked_cells.append(first)
+        self.locked.add(get_point_from_pose(first))
+        robot.locked_cells.append(get_point_from_pose(first))
         if second is not None:
-            self.locked.add(second)
-            robot.locked_cells.append(second)
+            self.locked.add(get_point_from_pose(second))
+            robot.locked_cells.append(get_point_from_pose(second))
 
     def is_done(self):
         '''Test if the current pose matches the goal pose'''

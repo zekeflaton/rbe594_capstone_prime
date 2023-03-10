@@ -2,6 +2,16 @@ from src.motion_planners import (
     AStarPlanner
 )
 
+def get_point_from_pose(pose):
+    """
+    We do not want to account for theta when address deadlocks, so we need to consider only the x and y coordinates
+
+    :param Tuple(int) pose: (x, y, theta) pose of the robot
+    :return: Tuple(int) pt: (x, y) location of the robot
+    """
+    x, y, _ = pose
+    return x, y
+
 
 class RobotPathPlanner(object):
 
@@ -57,7 +67,7 @@ class RobotPathPlanner(object):
                     list_of_locations[possible_action] = True
                     q = self.motion_planner.append_action(q, possible_action, cost=current_cost + cost_of_action)
 
-    def get_all_actions(self, x, motion_planner):
+    def get_all_actions(self, pose, motion_planner):
         """
 
         :param tuple x: Tuple of ints giving the (x,y) position as the source for new actions
@@ -65,34 +75,51 @@ class RobotPathPlanner(object):
         :return: list(Tuple): list of tuples of (possible_action, cost_of_action)
         """
         all_possible_actions = []
-        coordinates = [
-            (x[0] + 1, x[1]),
-            (x[0] - 1, x[1]),
-            (x[0], x[1] + 1),
-            (x[0], x[1] - 1),
-        ]
-        for x, y in coordinates:
-            if self.is_cord_inbounds(x, y) and (not self.orchestrator.is_pt_locked((x, y)) or (x, y) == self.end_pose):
-                all_possible_actions.append(((x, y), motion_planner.cost(x, y, self.end_pose[0], self.end_pose[1])))
+        coordinates = []
+
+        x_base, y_base, theta_base = pose
+        # test which axis the robot is aligned on
+        # add forward and backward moves
+        is_y_aligned = theta_base % 180 == 0
+        if is_y_aligned:
+            coordinates.append((x_base, y_base + 1, theta_base))
+            coordinates.append((x_base, y_base - 1, theta_base))
+        else:
+            coordinates.append((x_base + 1, y_base, theta_base))
+            coordinates.append((x_base - 1, y_base, theta_base))
+
+        # correct turns in edge cases
+        ccw_turn = theta_base - 90
+        if ccw_turn < 0:
+            ccw_turn = 270
+        cw_turn = theta_base + 90
+        if cw_turn > 270:
+            cw_turn = 0
+
+        # add possible turns
+        coordinates.append((x_base, y_base, ccw_turn))
+        coordinates.append((x_base, y_base, cw_turn))
+
+        for x, y, theta in coordinates:
+            if self.is_cord_inbounds((x, y, theta)) and (not self.orchestrator.is_pt_locked((x, y)) or (x, y) == (self.end_pose[0], self.end_pose[1])):
+                all_possible_actions.append(((x, y, theta), motion_planner.cost((x, y, theta), self.end_pose)))
         return all_possible_actions
 
-    def is_cord_inbounds(self, x, y):
+    def is_cord_inbounds(self, pose):
         """
-
-        :param int x: x position
-        :param int y: y position
+        :param tuple pose: Tuple of ints giving the (x, y, theta) position as the source for new actions
         :return: bool: Is the coordinate inside the bounds of the map
         """
-        return 0 <= x < self.max_x and 0 <= y < self.max_y
+        x, y, theta = pose
+        return 0 <= x < self.max_x and 0 <= y < self.max_y and 0 <= theta <= 360
 
-    def is_cord_blocked_by_obstacle(self, x, y):
+    def is_cord_blocked_by_obstacle(self, pose):
         """
-
-        :param int x: x position
-        :param int y: y position
+        :param tuple pose: Tuple of ints giving the (x, y, theta) position as the source for new actions
         :return: bool: Is the coordinate blocked by an obstacle
         """
-        return (x, y) in self.obstacles
+        pt = get_point_from_pose(pose)
+        return pt in self.obstacles
 
     def get_next_two_points(self):
         """
