@@ -45,5 +45,5 @@ for pt in shelves:
     ary[pt[0],pt[1]] = np.array([0,0,0])
 
 foo = im.fromarray(ary, mode='RGB')
-foo.save('foo.png')
+foo.save('warehouse_map.png')
 
