@@ -10,7 +10,7 @@ def run_analysis_sim(num_of_robots):
     """
 
     # load png map
-    png_map = Image.open('../src/warehouse_map.png')
+    png_map = Image.open('src/warehouse_map.png')
     ary_map = np.array(png_map)
     shelves = set()
     # num_of_robots = 5
@@ -29,11 +29,11 @@ def run_analysis_sim(num_of_robots):
             if px == 0:
                 shelves.add((i, j))
                 if len(goals) < num_of_robots:
-                    goals.append((i, j))
+                    goals.append((i, j, 0))
 
     # place the robots start poses
     for i in range(0, 10, 2):
-        starts.append((i, 0))
+        starts.append((i, 0, 0))
 
     # This class is just for painting robot
     # paths on the png in different colors
@@ -69,9 +69,9 @@ def run_analysis_sim(num_of_robots):
 
     # save the result jpg
     result_png = Image.fromarray(ary_map)
-    result_png.save('../results/result.png')
+    result_png.save('results/result.png')
     result_resized = result_png.resize((600, 600), Image.NEAREST)
-    result_resized.save('../results/result_resized.png')
+    result_resized.save('results/result_resized.png')
     print("Total number of deadlocks: {} with {} robots".format(orchestrator.deadlock_count, num_of_robots))
     return orchestrator.deadlock_count
 
