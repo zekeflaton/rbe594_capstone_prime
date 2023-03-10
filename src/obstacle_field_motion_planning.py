@@ -50,7 +50,8 @@ class Orchestrator(object):
         for robot in robots_to_move:
             # unlock reserved pts
             for pt in robot.locked_cells:
-                self.locked.remove(pt)
+                if pt in self.locked:
+                    self.locked.remove(pt)
             robot.locked_cells.clear()
 
             # move the robot to the next pose
@@ -182,13 +183,30 @@ class Robot(object):
         all_possible_actions = []
         all_new_actions = []
         x_base, y_base, theta_base = base_pose
-        for x in [-1, 0, 1]:
-            for y in [-1, 0, 1]:
-                for theta in [0, 90, 180, 270]:
-                    all_new_actions.append((x_base + x, y_base + y, theta))
+        # test which axis the robot is aligned on
+        # add forward and backward moves
+        is_y_aligned = theta_base % 180 == 0
+        if is_y_aligned:
+            all_new_actions.append((x_base, y_base + 1, theta_base))
+            all_new_actions.append((x_base, y_base - 1, theta_base))
+        else:
+            all_new_actions.append((x_base + 1, y_base, theta_base))
+            all_new_actions.append((x_base - 1, y_base, theta_base))
+
+        # correct turns in edge cases
+        ccw_turn = theta_base - 90
+        if ccw_turn < 0:
+            ccw_turn = 270
+        cw_turn = theta_base + 90
+        if cw_turn > 270:
+            cw_turn = 0
+
+        # add possible turns
+        all_new_actions.append((x_base, y_base, ccw_turn))
+        all_new_actions.append((x_base, y_base, cw_turn))
 
         for pose in all_new_actions:
-            if self.is_cord_inbounds(pose) and (not self.orchestrator.is_pt_locked(pose) or pose == self.end_pose):
+            if self.is_cord_inbounds(pose) and (not self.orchestrator.is_pt_locked(pose) or (pose[0], pose[1]) == (self.end_pose[0], self.end_pose[1])):
                 all_possible_actions.append((pose, motion_planner.cost(pose, self.end_pose)))
         return all_possible_actions
 
