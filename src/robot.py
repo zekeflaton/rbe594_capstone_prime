@@ -84,6 +84,8 @@ class Robot(object):
         self.max_x = max_x
         self.max_y = max_y
         self.current_pose = initial_pose
+        self.charging_station = initial_pose
+        self.shelf_pose = end_pose
         self.end_pose = end_pose
         self.locked_cells = []
         self.orchestrator = orchestrator  # TODO remove this reference if possible
@@ -91,6 +93,7 @@ class Robot(object):
         self.observers = []
         self.battery_charge = BatteryCharge()
         self.charge_locations = charge_locations
+        self.has_shelf = False
 
     def plan_path(self):
         """
@@ -208,6 +211,10 @@ class Robot(object):
                 observer.__call__(self.current_pose)
             # TODO remove this hardcoded drain amount with a value based on load, turning, movement, etc
             self.battery_charge.drain_battery(1.0)
+        
+        # mark that the robot has reached the shelf
+        if self.current_pose == self.shelf_pose:
+            self.has_shelf = True
 
     def subscribe_to_movement(self, func):
         self.observers.append(func)
@@ -224,7 +231,13 @@ class Robot(object):
         self.end_pose = end_pose
 
     def is_done(self):
-        return self.current_pose == self.end_pose
+        return self.current_pose == self.charging_station and self.has_shelf
+    
+    def reset(self, end_pose):
+        self.end_pose = end_pose
+        self.shelf_pose = end_pose
+        self.has_shelf = False
+        self._path = []
 
     @property
     def get_current_pose(self):

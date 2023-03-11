@@ -50,7 +50,10 @@ class Orchestrator(object):
             # move the robot to the next pose
             robot.move_robot()
             # if arrived at goal, we're done!
-            if robot.is_done():
+            if robot.current_pose == robot.shelf_pose:
+                robot.end_pose = robot.charging_station
+                robot.plan_path()
+            elif robot.is_done():
                 continue
 
             # identify the next two pts we need to
