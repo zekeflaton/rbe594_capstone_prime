@@ -13,14 +13,63 @@ def get_point_from_pose(pose):
     return x, y
 
 
-class RobotPathPlanner(object):
+class BatteryCharge(object):
+    MIN_CHARGE = 0.0
+    MAX_CHARGE = 100.0
 
-    def __init__(self, obstacles, orchestrator, max_x, max_y, initial_pose, end_pose=(None, None),
+    def __init__(self, initial_charge=None):
+        """
+        Initialize the battery level to the specified level or 0
+        :param float/None initial_charge: amount of initial charge
+        """
+        if initial_charge is None:
+            self.battery_charge = self.MIN_CHARGE
+        else:
+            self.battery_charge = self.bound_value_by_min_and_max(
+                value=initial_charge,
+                value_min=self.MIN_CHARGE,
+                value_max=self.MAX_CHARGE
+            )
+
+    def drain_battery(self, drain_amount):
+        """
+        Drain battery charge by specific amount
+
+        :param float drain_amount: amount to drain battery
+        """
+        self.battery_charge = self.bound_value_by_min_and_max(self.battery_charge - drain_amount)
+
+    def charge_battery(self, charge_amount):
+        """
+        Charge battery charge by specific amount
+
+        :param float charge_amount: amount to charge battery
+        """
+        self.battery_charge = self.bound_value_by_min_and_max(self.battery_charge + charge_amount)
+
+    def bound_value_by_min_and_max(self, value):
+        """
+        Ensure that a value is bounded by a min and max value.
+
+        :param float value: the value to be bounded
+        :return: float value: bounded between min and max
+        """
+        if value < self.MIN_CHARGE:
+            return self.MIN_CHARGE
+        elif value > self.MAX_CHARGE:
+            return self.MAX_CHARGE
+        return value
+
+
+class Robot(object):
+
+    def __init__(self, obstacles, charge_locations, orchestrator, max_x, max_y, initial_pose, end_pose=(None, None),
                  motion_planner=None):
         """
 
         :param set(Tuple) obstacles: set of tuples representing blocked grids
-        :param Orchestrator orchestrator: Orchestrator passes a copy of itself in
+        :param set(Tuple) charge_locations: set of tuples representing charging grids
+        :param src.orchestrator.Orchestrator orchestrator: Orchestrator passes a copy of itself in
         :param int max_x: max x of the grid
         :param int max_y: max y of the grid
         :param Tuple initial_pose: x,y of start point
@@ -37,6 +86,8 @@ class RobotPathPlanner(object):
         self.orchestrator = orchestrator  # TODO remove this reference if possible
         self.motion_planner = AStarPlanner() if motion_planner is None else motion_planner
         self.observers = []
+        self.battery_charge = BatteryCharge()
+        self.charge_locations = charge_locations
 
     def plan_path(self):
         """
@@ -139,13 +190,18 @@ class RobotPathPlanner(object):
         elif len(self._path) == 1:
             return self._path[0], None
         else:
-            print("We should never get here")
             return None
 
     def move_robot(self):
-        self.current_pose = self._path.pop(0)
-        for observer in self.observers:
-            observer.__call__(self.current_pose)
+        if self.current_pose in self.charge_locations and not self._path:
+            # TODO change this hardcoded value to something based on research
+            self.battery_charge.charge_battery(5)
+        else:
+            self.current_pose = self._path.pop(0)
+            for observer in self.observers:
+                observer.__call__(self.current_pose)
+            # TODO remove this hardcoded drain amount with a value based on load, turning, movement, etc
+            self.battery_charge.drain_battery(1.0)
 
     def subscribe_to_movement(self, func):
         self.observers.append(func)

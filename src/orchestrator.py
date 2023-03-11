@@ -1,13 +1,13 @@
-from src.robot import RobotPathPlanner, get_point_from_pose
+from src.robot import Robot, get_point_from_pose
 
 
 class Orchestrator(object):
     def __init__(self, shelves, size):
         self.shelves = shelves
         self.size = size
-        self.robots: dict[str, RobotPathPlanner] = {}
+        self.robots: dict[str, Robot] = {}
         self.locked = set()
-        self.deadloc_observers = []
+        self.deadlock_observers = []
         self.deadlock_count = 0
 
     def add_robot(self, robot_name, initial_pose, end_pose):
@@ -52,7 +52,7 @@ class Orchestrator(object):
             # we need to replan the path
             if self.is_pt_locked(first) or self.is_pt_locked(second):
                 self.deadlock_count += 1
-                for observer in self.deadloc_observers:
+                for observer in self.deadlock_observers:
                     observer.__call__(robot.current_pose)
                 robot.plan_path()
                 first, second = robot.get_next_two_points()
@@ -90,9 +90,9 @@ class Orchestrator(object):
         '''Call the assigned func when a deadlock is detected.
         The func will recieve the current pose of the robot being
         replanned.'''
-        self.deadloc_observers.append(func)
+        self.deadlock_observers.append(func)
 
     def unsubscribe_to_deadlock(self, func):
-        self.deadloc_observers.remove(func)
+        self.deadlock_observers.remove(func)
 
 
