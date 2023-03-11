@@ -47,8 +47,10 @@ class RobotPathPlanner(object):
         parent_dict = {}
         q, list_of_locations = self.motion_planner.initialize(self.current_pose, self.end_pose)
         nodes_visited = 0
+        print('nnnnnnn')
         while not q.empty():
             x, q, current_cost = self.motion_planner.get_next(q)
+            print(x)
             nodes_visited += 1
             if x == self.end_pose:  # If we're at the goal, we're done
                 self._path = self.backtrace(parent_dict)
@@ -66,6 +68,8 @@ class RobotPathPlanner(object):
                     parent_dict[possible_action] = x
                     list_of_locations[possible_action] = True
                     q = self.motion_planner.append_action(q, possible_action, cost=current_cost + cost_of_action)
+
+        raise ValueError('oops')
 
     def get_all_actions(self, pose, motion_planner):
         """
@@ -89,6 +93,7 @@ class RobotPathPlanner(object):
             coordinates.append((x_base - 1, y_base, theta_base))
 
         # correct turns in edge cases
+
         ccw_turn = theta_base - 90
         if ccw_turn < 0:
             ccw_turn = 270

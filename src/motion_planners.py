@@ -31,4 +31,4 @@ class AStarPlanner(BaseMotionPlanner):
     def cost(self, current_pose, goal_pose, counter=0):
         x_current, y_current, theta_current = current_pose
         x_goal, y_goal, theta_goal = goal_pose
-        return abs(x_current - x_goal) + abs(y_current - y_goal) + abs(theta_current - theta_goal)/90
+        return pow(abs(x_current - x_goal),2) + pow(abs(y_current - y_goal),2) + abs(theta_current - theta_goal)/90

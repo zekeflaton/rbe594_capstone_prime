@@ -2,22 +2,26 @@ from PIL import Image
 import numpy as np
 from src.orchestrator import Orchestrator
 from argparse import ArgumentParser
-
+import pandas as pd
+import random
 
 def run_analysis_sim(num_of_robots):
     """
     :param int num_of_robots:  Indicates the number of robots to place
     """
 
-    # load png map
-    png_map = Image.open('src/warehouse_map.png')
-    ary_map = np.array(png_map)
+    # load csv map
+    # csv_map = np.genfromtxt('src/warehouse.csv',delimiter=',', dtype=np.uint8)
+    csv_map = pd.read_csv('src/warehouse.csv', header=None).to_numpy()
+    ary_map = np.ones((csv_map.shape[0], csv_map.shape[1], 3), dtype='uint8') * 255
+    for i in range(csv_map.shape[0]):
+        for j in range(csv_map.shape[1]):
+            if csv_map[i,j] == 255:
+                ary_map[i,j] = np.array([0,0,0])
+    # ary_map = np.array(png_map)
     shelves = set()
-    # num_of_robots = 5
-    robots = []
-    starts = []
-    goals = []
     size = ary_map.shape
+    robots = []
 
     # identify the position of all the shelves
     # in the warehouse. Each robot will use a
@@ -28,12 +32,25 @@ def run_analysis_sim(num_of_robots):
             px = sum(ary_map[i, j])
             if px == 0:
                 shelves.add((i, j))
-                if len(goals) < num_of_robots:
-                    goals.append((i, j, 0))
 
-    # place the robots start poses
-    for i in range(0, 10, 2):
-        starts.append((i, 0, 0))
+    # create a list of all shelf locations
+    # so that we can select at random
+    shelf_list = list(shelves)
+    _goals = set()
+    _starts = set()
+    while len(_goals) < num_of_robots:
+        idx = random.randint(0, len(shelf_list)-1)
+        _goals.add(idx)
+        if len(_goals) == len(shelves):
+            raise ValueError('Not enough shelfs to give all robots a goal')
+    
+    while len(_starts) < num_of_robots:
+        xid = random.randint(0, size[0] - 1)
+        yid = random.randint(0, size[1] - 1)
+        _starts.add((xid, yid, 0))
+
+    goals = [(shelf_list[idx][0], shelf_list[idx][1], 0) for idx in _goals]
+    starts = list(_starts)
 
     # This class is just for painting robot
     # paths on the png in different colors
@@ -52,14 +69,20 @@ def run_analysis_sim(num_of_robots):
     # register the deadlock observer
     orchestrator.subscribe_to_deadlock(deadlock_detected)
     painters = []
-    colors = [[255, 0, 0], [255, 255, 0], [0, 255, 0], [0, 0, 255], [255, 0, 255]]
+    colors = []
+    for r in [0, 255]:
+        for g in [0, 255]:
+            for b in [0, 255]:
+                colors.append((r,g,b))
+    
+    colors.remove((0,0,0))
 
     # init each robot
     for goal, start, count in zip(goals, starts, range(len(goals))):
         robot = orchestrator.add_robot(count, start, goal)
         # register the move observer to paint
         # the robot path
-        painters.append(Painter(colors[count]))
+        painters.append(Painter(colors[count % len(colors)]))
         robot.subscribe_to_movement(painters[-1].paint_move)
         robots.append(robot)
 
@@ -78,7 +101,7 @@ def run_analysis_sim(num_of_robots):
 
 if __name__ == "__main__":
     parser = ArgumentParser(add_help=False)
-    parser.add_argument("--num_robots", type=int, default=5)
+    parser.add_argument("--num_robots", type=int, default=50)
 
     args = parser.parse_args()
     run_analysis_sim(args.num_robots)
