@@ -12,7 +12,7 @@ def run_analysis_sim(num_of_robots):
 
     # load csv map
     # csv_map = np.genfromtxt('src/warehouse.csv',delimiter=',', dtype=np.uint8)
-    csv_map = pd.read_csv('src/warehouse.csv', header=None).to_numpy()
+    csv_map = pd.read_csv('../src/warehouse.csv', header=None).to_numpy()
     ary_map = np.ones((csv_map.shape[0], csv_map.shape[1], 3), dtype='uint8') * 255
     for i in range(csv_map.shape[0]):
         for j in range(csv_map.shape[1]):
@@ -92,9 +92,9 @@ def run_analysis_sim(num_of_robots):
 
     # save the result jpg
     result_png = Image.fromarray(ary_map)
-    result_png.save('results/result.png')
+    result_png.save('../results/result.png')
     result_resized = result_png.resize((600, 600), Image.NEAREST)
-    result_resized.save('results/result_resized.png')
+    result_resized.save('../results/result_resized.png')
     print("Total number of deadlocks: {} with {} robots".format(orchestrator.deadlock_count, num_of_robots))
     return orchestrator.deadlock_count
 
