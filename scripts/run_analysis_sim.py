@@ -12,7 +12,7 @@ def run_analysis_sim(num_of_robots):
 
     # load csv map
     # csv_map = np.genfromtxt('src/warehouse.csv',delimiter=',', dtype=np.uint8)
-    csv_map = pd.read_csv('src/warehouse.csv', header=None).to_numpy()
+    csv_map = pd.read_csv('../src/warehouse.csv', header=None).to_numpy()
     ary_map = np.ones((csv_map.shape[0], csv_map.shape[1], 3), dtype='uint8') * 255
     for i in range(csv_map.shape[0]):
         for j in range(csv_map.shape[1]):
