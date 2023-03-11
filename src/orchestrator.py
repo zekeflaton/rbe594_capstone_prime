@@ -1,4 +1,4 @@
-from src.robot import Robot, get_point_from_pose
+from .robot import Robot, get_point_from_pose
 
 
 class Orchestrator(object):
@@ -9,6 +9,7 @@ class Orchestrator(object):
         self.locked = set()
         self.deadlock_observers = []
         self.deadlock_count = 0
+        self.charge_locations = []
 
     def add_robot(self, robot_name, initial_pose, end_pose):
         """
@@ -18,8 +19,16 @@ class Orchestrator(object):
         :param end_pose:
         :return:
         """
-        self.robots[robot_name] = RobotPathPlanner(self.shelves, self, self.size[0], self.size[1], initial_pose,
-                                                   end_pose)
+        self.robots[robot_name] = Robot(
+            robot_name=robot_name,
+            obstacles=self.shelves,
+            charge_locations=self.charge_locations,
+            orchestrator=self,
+            max_x=self.size[0],
+            max_y=self.size[1],
+            initial_pose=initial_pose,
+            end_pose=end_pose
+)
         self.robots[robot_name].plan_path()
         first, second = self.robots[robot_name].get_next_two_points()
         self.lock_cells(self.robots[robot_name], first, second)
@@ -68,8 +77,9 @@ class Orchestrator(object):
         This method should only be called from within the orchestrator
         as a conveinience for locking pts
         """
-        self.locked.add(get_point_from_pose(first))
-        robot.locked_cells.append(get_point_from_pose(first))
+        if first is not None:
+            self.locked.add(get_point_from_pose(first))
+            robot.locked_cells.append(get_point_from_pose(first))
         if second is not None:
             self.locked.add(get_point_from_pose(second))
             robot.locked_cells.append(get_point_from_pose(second))

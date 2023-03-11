@@ -1,6 +1,7 @@
-from src.motion_planners import (
+from .motion_planners import (
     AStarPlanner
 )
+
 
 def get_point_from_pose(pose):
     """
@@ -63,10 +64,11 @@ class BatteryCharge(object):
 
 class Robot(object):
 
-    def __init__(self, obstacles, charge_locations, orchestrator, max_x, max_y, initial_pose, end_pose=(None, None),
+    def __init__(self, robot_name, obstacles, charge_locations, orchestrator, max_x, max_y, initial_pose, end_pose=(None, None, None),
                  motion_planner=None):
         """
 
+        :param str robot_name: name of the robot
         :param set(Tuple) obstacles: set of tuples representing blocked grids
         :param set(Tuple) charge_locations: set of tuples representing charging grids
         :param src.orchestrator.Orchestrator orchestrator: Orchestrator passes a copy of itself in
@@ -76,7 +78,8 @@ class Robot(object):
         :param Tuple end_pose: x,y of end point
         :param BaseMotionPlanner motion_planner: Optional override for a motion planner class
         """
-        self._path = None
+        self._path = []
+        self.robot_name = robot_name
         self.obstacles = obstacles
         self.max_x = max_x
         self.max_y = max_y
@@ -96,6 +99,9 @@ class Robot(object):
         :return: bool: Did we plan successfully
         """
         parent_dict = {}
+        if None in self.end_pose:
+            print("No end pose for robot {} so a path could not be planned".format(self.robot_name))
+            return
         q, list_of_locations = self.motion_planner.initialize(self.current_pose, self.end_pose)
         nodes_visited = 0
         print('nnnnnnn')
@@ -182,7 +188,7 @@ class Robot(object):
         Returns the next two path points
         :return: (Tuple(Tuple))
         """
-        if self._path is None:
+        if not self._path:
             self.plan_path()
 
         if len(self._path) > 1:
@@ -190,7 +196,7 @@ class Robot(object):
         elif len(self._path) == 1:
             return self._path[0], None
         else:
-            return None
+            return None, None
 
     def move_robot(self):
         if self.current_pose in self.charge_locations and not self._path:
