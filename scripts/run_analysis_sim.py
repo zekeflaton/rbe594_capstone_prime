@@ -4,6 +4,7 @@ from src.orchestrator import Orchestrator
 from argparse import ArgumentParser
 import pandas as pd
 import random
+from src.generate_warehouse_map import generate_warehouse_numpy_map
 
 def run_analysis_sim(num_of_robots):
     """
@@ -11,14 +12,7 @@ def run_analysis_sim(num_of_robots):
     """
 
     # load csv map
-    # csv_map = np.genfromtxt('src/warehouse.csv',delimiter=',', dtype=np.uint8)
-    csv_map = pd.read_csv('../src/warehouse.csv', header=None).to_numpy()
-    ary_map = np.ones((csv_map.shape[0], csv_map.shape[1], 3), dtype='uint8') * 255
-    for i in range(csv_map.shape[0]):
-        for j in range(csv_map.shape[1]):
-            if csv_map[i,j] == 255:
-                ary_map[i,j] = np.array([0,0,0])
-    # ary_map = np.array(png_map)
+    ary_map = generate_warehouse_numpy_map(map_file='../src/warehouse.csv')
     shelves = set()
     size = ary_map.shape
     robots = []
