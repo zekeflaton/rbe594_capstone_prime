@@ -4,6 +4,7 @@ from src.orchestrator import Orchestrator
 from argparse import ArgumentParser
 import pandas as pd
 import random
+from src.generate_warehouse_map import generate_warehouse_numpy_map
 
 def run_analysis_sim(num_of_robots):
     """
@@ -11,25 +12,11 @@ def run_analysis_sim(num_of_robots):
     """
 
     # load csv map
-    # csv_map = np.genfromtxt('src/warehouse.csv',delimiter=',', dtype=np.uint8)
-    csv_map = pd.read_csv('../src/warehouse.csv', header=None).to_numpy()
-    ary_map = np.ones((csv_map.shape[0], csv_map.shape[1], 3), dtype='uint8') * 255
-    charging_stations = []
-    for i in range(csv_map.shape[0]):
-        for j in range(csv_map.shape[1]):
-            if csv_map[i,j] == 255:
-                ary_map[i,j] = np.array([0,0,0])
-            if csv_map[i,j] == 1:
-                charging_stations.append((i,j,0))
-    
-    if num_of_robots > len(charging_stations):
-        raise ValueError('Too many robots')
-    else:
-        starts = charging_stations[:num_of_robots]
-
-    shelves = set()
+    ary_map = generate_warehouse_numpy_map(map_file='../src/warehouse.csv')
+    obstacles = set()
     size = ary_map.shape
     robots = []
+    charging_stations = []
 
 
     # identify the position of all the shelves
@@ -39,17 +26,25 @@ def run_analysis_sim(num_of_robots):
     for i in range(ary_map.shape[0]):
         for j in range(ary_map.shape[1]):
             px = sum(ary_map[i, j])
-            if px == 0:
-                shelves.add((i, j))
+            if px == 0 or px == 255:
+                obstacles.add((i, j))
+            if px == 255:
+                charging_stations.append((i,j,0))
+
+    # add a robot to each charging station
+    if num_of_robots > len(charging_stations):
+        raise ValueError('Too many robots')
+    else:
+        starts = charging_stations[:num_of_robots]
 
     # create a list of all shelf locations
     # so that we can select at random
-    shelf_list = list(shelves)
+    shelf_list = list(obstacles)
     _goals = set()
     while len(_goals) < len(starts):
         idx = random.randint(0, len(shelf_list)-1)
         _goals.add(idx)
-        if len(_goals) == len(shelves):
+        if len(_goals) == len(obstacles):
             raise ValueError('Not enough shelfs to give all robots a goal')
 
     goals = [(shelf_list[idx][0], shelf_list[idx][1], 0) for idx in _goals]
@@ -68,8 +63,8 @@ def run_analysis_sim(num_of_robots):
         print('Deadlock detected at ' + str(pt) + ', replanning...')
 
     for x in charging_stations:
-        shelves.add((x[0],x[1]))
-    orchestrator = Orchestrator(shelves, size)
+        obstacles.add((x[0],x[1]))
+    orchestrator = Orchestrator(obstacles, size)
     # register the deadlock observer
     orchestrator.subscribe_to_deadlock(deadlock_detected)
     painters = []
