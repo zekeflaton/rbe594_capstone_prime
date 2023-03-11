@@ -25,7 +25,7 @@ class BatteryCharge(object):
         if initial_charge is None:
             self.battery_charge = self.MIN_CHARGE
         else:
-            self.battery_charge = bound_value_by_min_and_max(
+            self.battery_charge = self.bound_value_by_min_and_max(
                 value=initial_charge,
                 value_min=self.MIN_CHARGE,
                 value_max=self.MAX_CHARGE
@@ -59,6 +59,7 @@ class BatteryCharge(object):
         elif value > self.MAX_CHARGE:
             return self.MAX_CHARGE
         return value
+
 
 class Robot(object):
 
