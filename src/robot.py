@@ -63,12 +63,13 @@ class BatteryCharge(object):
 
 class Robot(object):
 
-    def __init__(self, obstacles, orchestrator, max_x, max_y, initial_pose, end_pose=(None, None),
+    def __init__(self, obstacles, charge_locations, orchestrator, max_x, max_y, initial_pose, end_pose=(None, None),
                  motion_planner=None):
         """
 
         :param set(Tuple) obstacles: set of tuples representing blocked grids
-        :param Orchestrator orchestrator: Orchestrator passes a copy of itself in
+        :param set(Tuple) charge_locations: set of tuples representing charging grids
+        :param src.orchestrator.Orchestrator orchestrator: Orchestrator passes a copy of itself in
         :param int max_x: max x of the grid
         :param int max_y: max y of the grid
         :param Tuple initial_pose: x,y of start point
@@ -86,6 +87,7 @@ class Robot(object):
         self.motion_planner = AStarPlanner() if motion_planner is None else motion_planner
         self.observers = []
         self.battery_charge = BatteryCharge()
+        self.charge_locations = charge_locations
 
     def plan_path(self):
         """
