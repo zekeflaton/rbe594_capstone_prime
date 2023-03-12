@@ -11,6 +11,7 @@ from src.motion_planners import (
     RandomPlanner
 )
 
+
 def main():
     metrics_file_path = "../results"
     write_line_to_file(os.path.join(metrics_file_path, "path_efficiency_analysis.csv"),

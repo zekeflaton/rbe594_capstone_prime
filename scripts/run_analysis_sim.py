@@ -2,8 +2,6 @@ from PIL import Image
 import numpy as np
 from src.orchestrator import Orchestrator
 from argparse import ArgumentParser
-import pandas as pd
-import random
 from src.generate_warehouse_map import generate_warehouse_numpy_map
 
 

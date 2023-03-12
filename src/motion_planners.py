@@ -1,6 +1,5 @@
 import queue
 import random
-import math
 
 
 class BaseMotionPlanner(object):
