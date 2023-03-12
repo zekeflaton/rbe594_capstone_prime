@@ -10,6 +10,8 @@ class Orchestrator(object):
         self.deadlock_observers = []
         self.deadlock_count = 0
         self.charge_locations = []
+        self.request_queue = []
+        self.waiting_robots = set()
 
     def add_robot(self, robot_name, initial_pose, end_pose):
         """
@@ -29,50 +31,72 @@ class Orchestrator(object):
             initial_pose=initial_pose,
             end_pose=end_pose
 )
-        self.robots[robot_name].plan_path()
-        first, second = self.robots[robot_name].get_next_two_points()
-        self.lock_cells(self.robots[robot_name], first, second)
+        self.waiting_robots.add(robot_name)
+        # self.robots[robot_name].plan_path()
+        # first, second = self.robots[robot_name].get_next_two_points()
+        # self.lock_cells(self.robots[robot_name], first, second)
         return self.robots[robot_name]
+
+    def make_request(self, end_pose):
+        self.request_queue.append(end_pose)
+
+    def on_deadlock(self, pose):
+        for observer in self.deadlock_observers:
+            observer.__call__(pose)
 
     def move_all(self):
         """
         Execute a move for all of the robots under the orchestrator
         control. If a collision is detected, replan the path.
         """
-        robots_to_move = [self.robots[r] for r in self.robots if not self.robots[r].is_done()]
-        for robot in robots_to_move:
+        robots_to_move = [(r, self.robots[r]) for r in self.robots if not self.robots[r].is_done()]
+        for id, robot in robots_to_move:
             # unlock reserved pts
             for pt in robot.locked_cells:
                 if pt in self.locked:
                     self.locked.remove(pt)
-            robot.locked_cells.clear()
+            robot.locked_cells.clear()  
 
-            # move the robot to the next pose
-            robot.move_robot()
-            # if arrived at goal, we're done!
-            if robot.current_pose == robot.shelf_pose:
-                robot.end_pose = robot.charging_station
-                robot.plan_path()
-            elif robot.is_done():
-                continue
+            # check if the robot is waiting
+            # for a path. If so, try to plan
+            # if we still can't find a path, skip this iteration
+            if id in self.waiting_robots:
+                success = robot.plan_path()
+                if success:
+                    self.waiting_robots.remove(id)
+                else:
+                    self.on_deadlock(robot.current_pose)
+                    continue
 
             # identify the next two pts we need to
             # lock for this robot
             first, second = robot.get_next_two_points()
-
             # if either is already reserved for another robot
             # we need to replan the path
             if self.is_pt_locked(first) or self.is_pt_locked(second):
                 self.deadlock_count += 1
-                for observer in self.deadlock_observers:
-                    observer.__call__(robot.current_pose)
-                robot.plan_path()
-                first, second = robot.get_next_two_points()
-
+                self.on_deadlock(robot.current_pose)
+                self.waiting_robots.add(id)
+                continue
+            
             # once an available path has been found,
             # reserve the first and second pts for this
             # robot
             self.lock_cells(robot, first, second)
+            robot.move_robot()
+            # if we're at the shelf, turn around and go
+            # back to charging/pickup station
+            if robot.current_pose == robot.shelf_pose:
+                robot.end_pose = robot.charging_station
+                self.waiting_robots.add(id)
+            # if we're back at the pickup station, and there's still
+            # requests left, pop the next request
+            elif robot.is_done() and len(self.request_queue) > 0:
+                next = self.request_queue.pop(0)
+                print(f'Requests left: {len(self.request_queue)}')
+                robot.reset(next)
+                self.waiting_robots.add(id)
+
 
     def lock_cells(self, robot, first, second=None):
         """

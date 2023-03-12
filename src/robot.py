@@ -107,10 +107,9 @@ class Robot(object):
             return
         q, list_of_locations = self.motion_planner.initialize(self.current_pose, self.end_pose)
         nodes_visited = 0
-        print('nnnnnnn')
+
         while not q.empty():
             x, q, current_cost = self.motion_planner.get_next(q)
-            print(x)
             nodes_visited += 1
             if x == self.end_pose:  # If we're at the goal, we're done
                 self._path = self.backtrace(parent_dict)
@@ -129,7 +128,8 @@ class Robot(object):
                     list_of_locations[possible_action] = True
                     q = self.motion_planner.append_action(q, possible_action, cost=current_cost + cost_of_action)
 
-        raise ValueError('oops')
+        # if there is no path, its deadlocked
+        return False
 
     def get_all_actions(self, pose, motion_planner):
         """
@@ -166,8 +166,11 @@ class Robot(object):
         coordinates.append((x_base, y_base, cw_turn))
 
         for x, y, theta in coordinates:
-            if self.is_cord_inbounds((x, y, theta)) and (not self.orchestrator.is_pt_locked((x, y)) or (x, y) == (self.end_pose[0], self.end_pose[1])):
+            if self.is_cord_inbounds((x, y, theta)) and (not self.orchestrator.is_pt_locked((x, y)) or (x, y) == (self.shelf_pose[0], self.shelf_pose[1])):
                 all_possible_actions.append(((x, y, theta), motion_planner.cost((x, y, theta), self.end_pose)))
+        
+        if len(all_possible_actions) == 0:
+            print('haaaa')
         return all_possible_actions
 
     def is_cord_inbounds(self, pose):
@@ -237,7 +240,7 @@ class Robot(object):
         self.end_pose = end_pose
         self.shelf_pose = end_pose
         self.has_shelf = False
-        self._path = []
+
 
     @property
     def get_current_pose(self):
