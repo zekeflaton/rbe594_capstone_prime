@@ -19,7 +19,7 @@ class BaseMotionPlanner(object):
         x = current_q[1]
         return x, q, current_cost
 
-    def cost(self, x, y, x_g, y_g, counter):
+    def cost(self, current_pose, goal_pose, counter=0):
         return 0
 
 
@@ -46,23 +46,10 @@ class DepthFirstSearchPlanner(BaseMotionPlanner):
         return super(DepthFirstSearchPlanner, self).initialize(q, current_pose)
 
 
-class DijkstrasPlanner(BaseMotionPlanner):
-    def initialize(self, current_pose, goal_pose):
-        q = queue.PriorityQueue()
-        return super(DijkstrasPlanner, self).initialize(q, current_pose)
-
-    def cost(self, x, y, x_g, y_g, counter):
-        # Moving right has cost of 1
-        # Moving left has cost of 2
-        # Moving up has cost of 3
-        # Moving down has cost of 4
-        return counter
-
-
 class RandomPlanner(BaseMotionPlanner):
     def initialize(self, current_pose, goal_pose):
         q = queue.PriorityQueue()
         return super(RandomPlanner, self).initialize(q, current_pose)
 
-    def cost(self, x, y, x_g, y_g, counter):
+    def cost(self, current_pose, goal_pose, counter=0):
         return random.randint(0, 128*128)

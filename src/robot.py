@@ -1,6 +1,10 @@
-from .motion_planners import (
+import os
+import time
+
+from src.motion_planners import (
     AStarPlanner
 )
+from src.helpers import write_line_to_file
 
 
 def get_point_from_pose(pose):
@@ -65,7 +69,7 @@ class BatteryCharge(object):
 class Robot(object):
 
     def __init__(self, robot_name, obstacles, charge_locations, orchestrator, max_x, max_y, initial_pose, end_pose=(None, None, None),
-                 motion_planner=None):
+                 motion_planner=None, metrics_file_path=None):
         """
 
         :param str robot_name: name of the robot
@@ -76,7 +80,8 @@ class Robot(object):
         :param int max_y: max y of the grid
         :param Tuple initial_pose: x,y of start point
         :param Tuple end_pose: x,y of end point
-        :param BaseMotionPlanner motion_planner: Optional override for a motion planner class
+        :param BaseMotionPlanner/None motion_planner: Optional override for a motion planner class
+        :param str/None metrics_file_path: Optional file path to save metrics
         """
         self._path = []
         self.robot_name = robot_name
@@ -94,6 +99,7 @@ class Robot(object):
         self.battery_charge = BatteryCharge()
         self.charge_locations = charge_locations
         self.has_shelf = False
+        self.metrics_file_path = metrics_file_path
 
     def plan_path(self):
         """
@@ -101,6 +107,7 @@ class Robot(object):
 
         :return: bool: Did we plan successfully
         """
+        start_time = time.time()
         parent_dict = {}
         if None in self.end_pose:
             print("No end pose for robot {} so a path could not be planned".format(self.robot_name))
@@ -115,6 +122,16 @@ class Robot(object):
                 self._path = self.backtrace(parent_dict)
                 # pop the first pt because we're already there!
                 self._path.pop(0)
+                end_time = time.time()
+                if self.metrics_file_path:
+                    write_line_to_file(os.path.join(self.metrics_file_path, "compute_time_analysis.csv"),
+                                       [self.motion_planner.__class__.__name__, str(end_time - start_time)])
+                    path_length = len(self._path)
+                    # +1 for each movement in x, y, or 90 degree rotation
+                    best_path_length = abs(self.current_pose[0] - self.end_pose[0]) + abs(self.current_pose[1] - self.end_pose[1]) + abs(self.current_pose[2] - self.end_pose[2])/90
+                    write_line_to_file(os.path.join(self.metrics_file_path, "path_efficiency_analysis.csv"),
+                                       [self.motion_planner.__class__.__name__, str(best_path_length/path_length)])
+
                 return True
 
             # Iterate over all possible locations we could move to from our current location
@@ -129,12 +146,16 @@ class Robot(object):
                     q = self.motion_planner.append_action(q, possible_action, cost=current_cost + cost_of_action)
 
         # if there is no path, its deadlocked
+        end_time = time.time()
+        if self.metrics_file_path:
+            write_line_to_file(os.path.join(self.metrics_file_path, "compute_time_analysis.csv"),
+                               [self.motion_planner.__class__.__name__, str(end_time - start_time)])
         return False
 
     def get_all_actions(self, pose, motion_planner):
         """
 
-        :param tuple x: Tuple of ints giving the (x,y) position as the source for new actions
+        :param tuple pose: Tuple of ints giving the (x,y) position as the source for new actions
         :param BaseMotionPlanner motion_planner: Motion planner to use for cost calculations
         :return: list(Tuple): list of tuples of (possible_action, cost_of_action)
         """
