@@ -41,6 +41,7 @@ class Orchestrator(object):
         self.request_queue.append(end_pose)
 
     def on_deadlock(self, pose):
+        self.deadlock_count += 1
         for observer in self.deadlock_observers:
             observer.__call__(pose)
 
@@ -73,8 +74,7 @@ class Orchestrator(object):
             first, second = robot.get_next_two_points()
             # if either is already reserved for another robot
             # we need to replan the path
-            if self.is_pt_locked(first) or self.is_pt_locked(second):
-                self.deadlock_count += 1
+            if self.is_pt_locked(first) or self.is_pt_locked(second):                
                 self.on_deadlock(robot.current_pose)
                 self.waiting_robots.add(id)
                 continue
