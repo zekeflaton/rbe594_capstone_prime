@@ -169,8 +169,6 @@ class Robot(object):
             if self.is_cord_inbounds((x, y, theta)) and (not self.orchestrator.is_pt_locked((x, y)) or (x, y) == (self.shelf_pose[0], self.shelf_pose[1])):
                 all_possible_actions.append(((x, y, theta), motion_planner.cost((x, y, theta), self.end_pose)))
         
-        if len(all_possible_actions) == 0:
-            print('haaaa')
         return all_possible_actions
 
     def is_cord_inbounds(self, pose):
