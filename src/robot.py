@@ -234,7 +234,7 @@ class Robot(object):
     def is_done(self):
         return self.current_pose == self.charging_station and self.has_shelf
     
-    def reset(self, end_pose):
+    def set_new_endpoint(self, end_pose):
         self.end_pose = end_pose
         self.shelf_pose = end_pose
         self.has_shelf = False

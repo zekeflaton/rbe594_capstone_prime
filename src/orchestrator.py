@@ -11,6 +11,9 @@ class Orchestrator(object):
         self.deadlock_count = 0
         self.charge_locations = []
         self.request_queue = []
+        # this set holds the ids of robots
+        # waiting to plan a path. Deadlocked robots
+        # also get placed here to wait for a new path
         self.waiting_robots = set()
 
     def add_robot(self, robot_name, initial_pose, end_pose):
@@ -94,7 +97,7 @@ class Orchestrator(object):
             elif robot.is_done() and len(self.request_queue) > 0:
                 next = self.request_queue.pop(0)
                 print(f'Requests left: {len(self.request_queue)}')
-                robot.reset(next)
+                robot.set_new_endpoint(next)
                 self.waiting_robots.add(id)
 
 
