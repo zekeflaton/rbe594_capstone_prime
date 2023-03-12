@@ -1,6 +1,7 @@
-from src.motion_planners import (
+from .motion_planners import (
     AStarPlanner
 )
+
 
 def get_point_from_pose(pose):
     """
@@ -63,10 +64,11 @@ class BatteryCharge(object):
 
 class Robot(object):
 
-    def __init__(self, obstacles, charge_locations, orchestrator, max_x, max_y, initial_pose, end_pose=(None, None),
+    def __init__(self, robot_name, obstacles, charge_locations, orchestrator, max_x, max_y, initial_pose, end_pose=(None, None, None),
                  motion_planner=None):
         """
 
+        :param str robot_name: name of the robot
         :param set(Tuple) obstacles: set of tuples representing blocked grids
         :param set(Tuple) charge_locations: set of tuples representing charging grids
         :param src.orchestrator.Orchestrator orchestrator: Orchestrator passes a copy of itself in
@@ -76,11 +78,14 @@ class Robot(object):
         :param Tuple end_pose: x,y of end point
         :param BaseMotionPlanner motion_planner: Optional override for a motion planner class
         """
-        self._path = None
+        self._path = []
+        self.robot_name = robot_name
         self.obstacles = obstacles
         self.max_x = max_x
         self.max_y = max_y
         self.current_pose = initial_pose
+        self.charging_station = initial_pose
+        self.shelf_pose = end_pose
         self.end_pose = end_pose
         self.locked_cells = []
         self.orchestrator = orchestrator  # TODO remove this reference if possible
@@ -88,6 +93,7 @@ class Robot(object):
         self.observers = []
         self.battery_charge = BatteryCharge()
         self.charge_locations = charge_locations
+        self.has_shelf = False
 
     def plan_path(self):
         """
@@ -96,8 +102,12 @@ class Robot(object):
         :return: bool: Did we plan successfully
         """
         parent_dict = {}
+        if None in self.end_pose:
+            print("No end pose for robot {} so a path could not be planned".format(self.robot_name))
+            return
         q, list_of_locations = self.motion_planner.initialize(self.current_pose, self.end_pose)
         nodes_visited = 0
+
         while not q.empty():
             x, q, current_cost = self.motion_planner.get_next(q)
             nodes_visited += 1
@@ -117,6 +127,9 @@ class Robot(object):
                     parent_dict[possible_action] = x
                     list_of_locations[possible_action] = True
                     q = self.motion_planner.append_action(q, possible_action, cost=current_cost + cost_of_action)
+
+        # if there is no path, its deadlocked
+        return False
 
     def get_all_actions(self, pose, motion_planner):
         """
@@ -140,6 +153,7 @@ class Robot(object):
             coordinates.append((x_base - 1, y_base, theta_base))
 
         # correct turns in edge cases
+
         ccw_turn = theta_base - 90
         if ccw_turn < 0:
             ccw_turn = 270
@@ -152,8 +166,9 @@ class Robot(object):
         coordinates.append((x_base, y_base, cw_turn))
 
         for x, y, theta in coordinates:
-            if self.is_cord_inbounds((x, y, theta)) and (not self.orchestrator.is_pt_locked((x, y)) or (x, y) == (self.end_pose[0], self.end_pose[1])):
+            if self.is_cord_inbounds((x, y, theta)) and (not self.orchestrator.is_pt_locked((x, y)) or (x, y) == (self.shelf_pose[0], self.shelf_pose[1])):
                 all_possible_actions.append(((x, y, theta), motion_planner.cost((x, y, theta), self.end_pose)))
+        
         return all_possible_actions
 
     def is_cord_inbounds(self, pose):
@@ -177,7 +192,7 @@ class Robot(object):
         Returns the next two path points
         :return: (Tuple(Tuple))
         """
-        if self._path is None:
+        if not self._path:
             self.plan_path()
 
         if len(self._path) > 1:
@@ -185,7 +200,7 @@ class Robot(object):
         elif len(self._path) == 1:
             return self._path[0], None
         else:
-            return None
+            return None, None
 
     def move_robot(self):
         if self.current_pose in self.charge_locations and not self._path:
@@ -197,6 +212,10 @@ class Robot(object):
                 observer.__call__(self.current_pose)
             # TODO remove this hardcoded drain amount with a value based on load, turning, movement, etc
             self.battery_charge.drain_battery(1.0)
+        
+        # mark that the robot has reached the shelf
+        if self.current_pose == self.shelf_pose:
+            self.has_shelf = True
 
     def subscribe_to_movement(self, func):
         self.observers.append(func)
@@ -213,7 +232,13 @@ class Robot(object):
         self.end_pose = end_pose
 
     def is_done(self):
-        return self.current_pose == self.end_pose
+        return self.current_pose == self.charging_station and self.has_shelf
+    
+    def set_new_endpoint(self, end_pose):
+        self.end_pose = end_pose
+        self.shelf_pose = end_pose
+        self.has_shelf = False
+
 
     @property
     def get_current_pose(self):
