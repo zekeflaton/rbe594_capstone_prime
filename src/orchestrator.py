@@ -43,8 +43,7 @@ class Orchestrator(object):
     def make_request(self, end_pose):
         self.request_queue.append(end_pose)
 
-    def on_deadlock(self, pose):
-        self.deadlock_count += 1
+    def on_deadlock(self, pose):        
         for observer in self.deadlock_observers:
             observer.__call__(pose)
 

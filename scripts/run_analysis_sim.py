@@ -1,10 +1,8 @@
 from PIL import Image
-import numpy as np
 from src.orchestrator import Orchestrator
 from argparse import ArgumentParser
-import pandas as pd
-import random
 from src.generate_warehouse_map import generate_warehouse_numpy_map
+from src.utility import RobotPath, Counter
 
 def run_analysis_sim(num_of_robots, shelves_to_grab):
     """
@@ -43,40 +41,25 @@ def run_analysis_sim(num_of_robots, shelves_to_grab):
 
     goals = [(x[0], x[1], 0) for x in shelf_list[:shelves_to_grab]]
 
-    # This class is just for painting robot
-    # paths on the png in different colors
-    class Painter:
-        def __init__(self, color) -> None:
-            self.color = color
+    
 
-        def paint_move(self, pt):
-            ary_map[pt[0], pt[1]] = np.array(self.color)
-
-    # print a message when a dead lock is detected
-    def deadlock_detected(pt):
-        print('Deadlock detected at ' + str(pt) + ', replanning...')
-
+    # track the number of deadlocks detected
+    deadlock_counter = Counter()
     orchestrator = Orchestrator(obstacles, size)
     # register the deadlock observer
-    orchestrator.subscribe_to_deadlock(deadlock_detected)
-    painters = []
-    colors = []
-    for r in [0, 255]:
-        for g in [0, 255]:
-            for b in [0, 255]:
-                colors.append((r,g,b))
+    orchestrator.subscribe_to_deadlock(lambda _: deadlock_counter.increment())
     
-    colors.remove((0,0,0))
-    colors.remove((255,255,255))
+    robot_paths = []
 
     # init each robot
     for count, start in enumerate(starts):
         goal = goals.pop()
         robot = orchestrator.add_robot(count, start, goal)
-        # register the move observer to paint
-        # the robot path
-        painters.append(Painter(colors[count % len(colors)]))
-        robot.subscribe_to_movement(painters[-1].paint_move)
+        robot_paths.append(RobotPath(count))
+        
+        # register the move observer to track
+        # the robot path        
+        robot.subscribe_to_movement(robot_paths[-1].add_to_path)
         robots.append(robot)
 
     # create a queue of requests to be handled when a robot
@@ -93,8 +76,8 @@ def run_analysis_sim(num_of_robots, shelves_to_grab):
     result_png.save('../results/result.png')
     result_resized = result_png.resize((600, 600), Image.NEAREST)
     result_resized.save('../results/result_resized.png')
-    print("Total number of deadlocks: {} with {} robots".format(orchestrator.deadlock_count, num_of_robots))
-    return orchestrator.deadlock_count
+    print("Total number of deadlocks: {} with {} robots".format(deadlock_counter.count, num_of_robots))
+    return deadlock_counter.count, robot_paths
 
 
 if __name__ == "__main__":
