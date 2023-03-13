@@ -1,3 +1,5 @@
 *.ini
 .idea*
 *.pyc
+*.csv
+*.png
