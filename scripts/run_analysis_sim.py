@@ -2,13 +2,16 @@ from PIL import Image
 import numpy as np
 from src.orchestrator import Orchestrator
 from argparse import ArgumentParser
-import pandas as pd
-import random
 from src.generate_warehouse_map import generate_warehouse_numpy_map
 
-def run_analysis_sim(num_of_robots, shelves_to_grab):
+
+def run_analysis_sim(num_of_robots, shelves_to_grab, motion_planner=None, metrics_file_path=None):
     """
+
     :param int num_of_robots:  Indicates the number of robots to place
+    :param shelves_to_grab:
+    :param BaseMotionPlanner/None motion_planner: Optional override for a motion planner class
+    :param str/None metrics_file_path: Optional file path to save metrics
     """
 
     # load csv map
@@ -54,9 +57,15 @@ def run_analysis_sim(num_of_robots, shelves_to_grab):
 
     # print a message when a dead lock is detected
     def deadlock_detected(pt):
-        print('Deadlock detected at ' + str(pt) + ', replanning...')
+        pass
+        # print('Deadlock detected at ' + str(pt) + ', replanning...')
 
-    orchestrator = Orchestrator(obstacles, size)
+    orchestrator = Orchestrator(
+        shelves=obstacles,
+        size=size,
+        motion_planner=motion_planner,
+        metrics_file_path=metrics_file_path
+    )
     # register the deadlock observer
     orchestrator.subscribe_to_deadlock(deadlock_detected)
     painters = []
