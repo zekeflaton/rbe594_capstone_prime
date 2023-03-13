@@ -21,6 +21,8 @@ class Painter:
     def paint_move(self, pt):
         self.ary_map[pt[0], pt[1]] = np.array(self.color)
 
+# a class to store path info
+# when subscribed to the robot obj
 class RobotPath:
     def __init__(self, name) -> None:
         self.name = name
@@ -33,6 +35,8 @@ class RobotPath:
     def path(self):
         return self._path
 
+# simple counter that subscribes
+# to the deadlock event
 class Counter:
     def __init__(self) -> None:
         self._count = 0
