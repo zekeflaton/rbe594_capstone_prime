@@ -29,5 +29,6 @@ def generate_warehouse_numpy_map(map_file='../src/warehouse.csv'):
 
 if __name__ == "__main__":
     warehouse_map = generate_warehouse_numpy_map()
-    foo = im.fromarray(warehouse_map, mode='RGB')
-    foo.save('warehouse_map.png')
+    warehouse_map_png = im.fromarray(warehouse_map, mode='RGB')
+    warehouse_map_png_resized = warehouse_map_png.resize((600, 600), im.NEAREST)
+    warehouse_map_png_resized.save('warehouse_map.png')
