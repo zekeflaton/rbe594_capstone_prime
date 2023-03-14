@@ -2,11 +2,16 @@ from PIL import Image
 from src.orchestrator import Orchestrator
 from argparse import ArgumentParser
 from src.generate_warehouse_map import generate_warehouse_numpy_map
-from src.utility import RobotPath, Counter
+from src.helpers import RobotPath, Counter
 
-def run_analysis_sim(num_of_robots, shelves_to_grab):
+
+def run_analysis_sim(num_of_robots, shelves_to_grab, motion_planner=None, metrics_file_path=None):
     """
+
     :param int num_of_robots:  Indicates the number of robots to place
+    :param shelves_to_grab:
+    :param BaseMotionPlanner/None motion_planner: Optional override for a motion planner class
+    :param str/None metrics_file_path: Optional file path to save metrics
     """
 
     # load csv map
@@ -45,7 +50,13 @@ def run_analysis_sim(num_of_robots, shelves_to_grab):
 
     # track the number of deadlocks detected
     deadlock_counter = Counter()
-    orchestrator = Orchestrator(obstacles, size)
+
+    orchestrator = Orchestrator(
+        shelves=obstacles,
+        size=size,
+        motion_planner=motion_planner,
+        metrics_file_path=metrics_file_path
+    )
     # register the deadlock observer
     orchestrator.subscribe_to_deadlock(lambda _: deadlock_counter.increment())
     

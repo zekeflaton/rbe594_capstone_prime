@@ -1,8 +1,16 @@
-from .robot import Robot, get_point_from_pose
+from src.robot import Robot, get_point_from_pose
 
 
 class Orchestrator(object):
-    def __init__(self, shelves, size):
+    def __init__(self, shelves, size, motion_planner=None, metrics_file_path=None):
+        """
+        Initialze the orchestrator
+
+        :param shelves: array indicating locations of obstacles/shelves
+        :param size: size of the map (x, y)
+        :param BaseMotionPlanner/None motion_planner: Optional override for a motion planner class
+        :param str/None metrics_file_path: Optional file path to save metrics
+        """
         self.shelves = shelves
         self.size = size
         self.robots: dict[str, Robot] = {}
@@ -15,6 +23,9 @@ class Orchestrator(object):
         # waiting to plan a path. Deadlocked robots
         # also get placed here to wait for a new path
         self.waiting_robots = set()
+        self.motion_planner = motion_planner
+        self.metrics_file_path = metrics_file_path
+
 
     def add_robot(self, robot_name, initial_pose, end_pose):
         """
@@ -32,8 +43,10 @@ class Orchestrator(object):
             max_x=self.size[0],
             max_y=self.size[1],
             initial_pose=initial_pose,
-            end_pose=end_pose
-)
+            end_pose=end_pose,
+            motion_planner=self.motion_planner,
+            metrics_file_path=self.metrics_file_path,
+        )
         self.waiting_robots.add(robot_name)
         # self.robots[robot_name].plan_path()
         # first, second = self.robots[robot_name].get_next_two_points()
