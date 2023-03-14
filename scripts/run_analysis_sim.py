@@ -57,6 +57,12 @@ def run_analysis_sim(num_of_robots, shelves_to_grab, motion_planner=None, metric
         motion_planner=motion_planner,
         metrics_file_path=metrics_file_path
     )
+    orchestrator = Orchestrator(
+        shelves=obstacles,
+        size=size,
+        motion_planner=motion_planner,
+        metrics_file_path=metrics_file_path
+    )
     # register the deadlock observer
     orchestrator.subscribe_to_deadlock(lambda _: deadlock_counter.increment())
     
