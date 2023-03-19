@@ -1,0 +1,2 @@
+robot_control:robot_description
+-DPYTHON_EXECUTABLE=/usr/bin/python3 -DCATKIN_DEVEL_PREFIX=/home/harish/wpi/caps_proj_kiva/devel -DCMAKE_INSTALL_PREFIX=/home/harish/wpi/caps_proj_kiva/install -G Unix Makefiles
