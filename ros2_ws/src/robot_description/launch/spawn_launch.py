@@ -11,42 +11,42 @@ def generate_launch_description():
     default_model_path = os.path.join(pkg_share, 'urdf/robot.urdf.xacro')
     default_rviz_config_path = os.path.join(pkg_share, 'rviz/robotmodel.rviz')
     doc = xacro.process_file(default_model_path, mappings={'radius': '0.9'})
-    world_path=os.path.join(pkg_share, 'world/warehous.world')
+    world_path=os.path.join(pkg_share, 'world/warehouse.world')
 
 # path_to_urdf = get_package_share_path('pr2_description') / 'robots' / 'pr2.urdf.xacro'
-    robot_state_publisher_node = launch_ros.actions.Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        parameters=[{
-            'robot_description': launch_ros.descriptions.ParameterValue(
-                Command(['xacro ',
-                         str(default_model_path),
-                         ' sensor_rplidar:=true',
-                         ' sensor_lidar:=false',
-                         ' sensor_imu:=true',
-                        ' sensor_camera:=true']),
-                    value_type=str
-            )
-        }]
-    )
+    # robot_state_publisher_node = launch_ros.actions.Node(
+    #     package='robot_state_publisher',
+    #     executable='robot_state_publisher',
+    #     parameters=[{
+    #         'robot_description': launch_ros.descriptions.ParameterValue(
+    #             Command(['xacro ',
+    #                      str(default_model_path),
+    #                      ' sensor_rplidar:=true',
+    #                      ' sensor_lidar:=false',
+    #                      ' sensor_imu:=true',
+    #                     ' sensor_camera:=true']),
+    #                 value_type=str
+    #         )
+    #     }]
+    # )
 
-    spawn_entity = launch_ros.actions.Node(
-        package='gazebo_ros',
-        executable='spawn_entity.py',
-        arguments=['-entity', 'my_robot', '-topic', 'robot_description'],
-        output='screen'
-    )
+    # spawn_entity = launch_ros.actions.Node(
+    #     package='gazebo_ros',
+    #     executable='spawn_entity.py',
+    #     arguments=['-entity', 'my_robot', '-topic', 'robot_description'],
+    #     output='screen'
+    # )
     # robot_state_publisher_node = launch_ros.actions.Node(
     #     package='robot_state_publisher',
     #     executable='robot_state_publisher',
     #     parameters=[{'robot_description': Command(['xacro ', LaunchConfiguration('model')])}]
     # )
-    joint_state_publisher_node = launch_ros.actions.Node(
-        package='joint_state_publisher',
-        executable='joint_state_publisher',
-        name='joint_state_publisher',
-        condition=launch.conditions.UnlessCondition(LaunchConfiguration('gui'))
-    )
+    # joint_state_publisher_node = launch_ros.actions.Node(
+    #     package='joint_state_publisher',
+    #     executable='joint_state_publisher',
+    #     name='joint_state_publisher',
+    #     condition=launch.conditions.UnlessCondition(LaunchConfiguration('gui'))
+    # )
     # joint_state_publisher_gui_node = launch_ros.actions.Node(
     #     package='joint_state_publisher_gui',
     #     executable='joint_state_publisher_gui',
@@ -61,6 +61,15 @@ def generate_launch_description():
         output='screen',
         # arguments=['-d', LaunchConfiguration('rvizconfig')],
     )
+# export GAZEBO_PLUGIN_PATH=~/<path>/my_package_example/lib:${GAZEBO_PLUGIN_PATH}
+
+# export GAZEBO_MODEL_PATH=~/<path>/my_package_example/models:${GAZEBO_MODEL_PATH}
+
+# export GAZEBO_RESOURCE_PATH=~/<path>/my_package_example/models:${GAZEBO_RESOURCE_PATH}
+
+# export GAZEBO_PLUGIN_PATH=~/git/rbe594_capstone_prime/ros2_ws/install/robot_description/lib:${GAZEBO_PLUGIN_PATH}
+# export GAZEBO_MODEL_PATH=~/git/rbe594_capstone_prime/ros2_ws/install/robot_description/share/robot_description/models:${GAZEBO_MODEL_PATH}
+# export GAZEBO_RESOURCE_PATH=~/git/rbe594_capstone_prime/ros2_ws/install/robot_description/share/robot_description/world:${GAZEBO_RESOURCE_PATH}
 
     return launch.LaunchDescription([
         launch.actions.DeclareLaunchArgument(name='gui', default_value='True',
@@ -73,9 +82,9 @@ def generate_launch_description():
                                       output='screen'),
         launch.actions.ExecuteProcess(cmd=['gazebo', '--verbose', '-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so', world_path],
                                       output='screen'),
-        joint_state_publisher_node,
+        # joint_state_publisher_node,
         # joint_state_publisher_gui_node,
-        robot_state_publisher_node,
+        # robot_state_publisher_node,
         rviz_node,
-        spawn_entity
+        # spawn_entity
     ])
