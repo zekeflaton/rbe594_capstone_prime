@@ -3,3 +3,6 @@
 *.pyc
 *.csv
 *.png
+**/install/
+**/log/
+**/build/
