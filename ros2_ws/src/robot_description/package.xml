@@ -4,19 +4,22 @@
   <name>robot_description</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="chrisjd91@gmail.com">chris</maintainer>
+  <maintainer email="robjmenna@gmail.com">robjm</maintainer>
   <license>TODO: License declaration</license>
 
-  <test_depend>ament_copyright</test_depend>
-  <test_depend>ament_flake8</test_depend>
-  <test_depend>ament_pep257</test_depend>
-  <test_depend>python3-pytest</test_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <exec_depend>ros2launch</exec_depend>
-  <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>joint_state_publisher</exec_depend>
+  <!-- <exec_depend>joint_state_publisher_gui</exec_depend> -->
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>rviz</exec_depend>
+  <exec_depend>robot_localization</exec_depend>
+  <exec_depend>xacro</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
 
   <export>
-    <build_type>ament_python</build_type>
-    <gazebo_ros gazebo_media_path="${prefix}" gazebo_model_path="${prefix}/models"/>
+    <build_type>ament_cmake</build_type>
   </export>
 </package>

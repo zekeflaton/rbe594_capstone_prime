@@ -23,13 +23,13 @@
             <collision name="${base_link}_collision">
                 <origin rpy="0  0  3.14" xyz="0  0  0.0118" />
                 <geometry>
-                    <mesh filename="package://robot_description/models/laser_robot/meshes/carcaca.dae" scale="1 1 1" />
+                    <mesh filename="$(find robot_description)/models/laser_robot/meshes/carcaca.dae" scale="1 1 1" />
                 </geometry>
             </collision>
             <visual name="${base_link}_visual">
                 <origin rpy="0  0  3.14" xyz="0  0  0.0118" />
                 <geometry>
-                    <mesh filename="package://robot_description/models/laser_robot/meshes/carcaca.dae" scale="1 1 1" />
+                    <mesh filename="$(find robot_description)/models/laser_robot/meshes/carcaca.dae" scale="1 1 1" />
                 </geometry>
             </visual>
         </link>

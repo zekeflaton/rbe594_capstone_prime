@@ -30,7 +30,7 @@
           <stddev>0.01</stddev>
         </noise>
       </ray>
-      <plugin name="gazebo_ros_head_hokuyo_controller" filename="libgazebo_ros_laser.so">
+      <plugin name="gazebo_ros_head_hokuyo_controllerrp" filename="libgazebo_ros_ray_sensor.so">
         <topicName>/my_robot/rplidar/laser/scan</topicName>
         <frameName>rplidar</frameName>
       </plugin>
@@ -52,13 +52,13 @@
     <collision name="rplidar_collision">
       <origin rpy="0 0 1.20" xyz="-0.03 0.02 -0.02" />
       <geometry>
-        <mesh filename="package://robot_description/models/laser_robot/meshes/rplidar.dae" scale="0.7 0.7 0.7" />
+        <mesh filename="$(find robot_description)/models/laser_robot/meshes/rplidar.dae" scale="0.7 0.7 0.7" />
       </geometry>
     </collision>
     <visual name="rplidar_visual">
       <origin rpy="0 0 1.20" xyz="-0.03 0.02 -0.02" />
       <geometry>
-        <mesh filename="package://robot_description/models/laser_robot/meshes/rplidar.dae" scale="0.7 0.7 0.7" />
+        <mesh filename="$(find robot_description)/models/laser_robot/meshes/rplidar.dae" scale="0.7 0.7 0.7" />
       </geometry>
     </visual>
   </link>

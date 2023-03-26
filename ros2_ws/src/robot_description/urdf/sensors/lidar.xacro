@@ -30,7 +30,7 @@
           <stddev>0.01</stddev>
         </noise>
       </ray>
-      <plugin name="gazebo_ros_head_hokuyo_controller" filename="libgazebo_ros_laser.so">
+      <plugin name="gazebo_ros_head_hokuyo_controller" filename="libgazebo_ros_ray_sensor.so">
         <topicName>/my_robot/laser/scan</topicName>
         <frameName>lidar</frameName>
       </plugin>
@@ -52,13 +52,13 @@
     <collision name="lidar_collision">
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
-        <mesh filename="package://robot_description/models/laser_robot/lidar/meshes/lidar.obj" scale="0.5 0.5 0.5" />
+        <mesh filename="$(find robot_description)/models/laser_robot/lidar/meshes/lidar.obj" scale="0.5 0.5 0.5" />
       </geometry>
     </collision>
     <visual name="lidar_visual">
       <origin rpy="0 1.57 1.57" xyz="0 0 0" />
       <geometry>
-        <mesh filename="package://robot_description/models/laser_robot/lidar/meshes/lidar.obj" scale="0.5 0.5 0.5" />
+        <mesh filename="$(find robot_description)/models/laser_robot/lidar/meshes/lidar.obj" scale="0.5 0.5 0.5" />
       </geometry>
     </visual>
   </link>
