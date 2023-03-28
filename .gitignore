@@ -3,3 +3,7 @@
 *.pyc
 *.csv
 *.png
+**/install/
+**/log/
+**/build/
+*/src/sam_bot_description/
