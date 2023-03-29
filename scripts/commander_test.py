@@ -2,35 +2,39 @@ from nav2_simple_commander.robot_navigator import BasicNavigator, PoseStamped
 import geometry_msgs
 import rclpy
 
-rclpy.init()
-nav = BasicNavigator()
+from IPython.terminal.embed import InteractiveShellEmbed
 
-poses = []
-# Set our demo's initial pose
-initial_pose = PoseStamped()
-initial_pose.header.frame_id = 'map'
-initial_pose.header.stamp = nav.get_clock().now().to_msg()
-initial_pose.pose.position.x = -1.81
-initial_pose.pose.position.y = -0.53
-initial_pose.pose.position.z = 0.0
-initial_pose.pose.orientation.w = 1.0
-initial_pose.pose.orientation.z = 0.01
-poses.append(initial_pose)
-# Set our demo's initial pose
-initial_pose = PoseStamped()
-initial_pose.header.frame_id = 'map'
-initial_pose.header.stamp = nav.get_clock().now().to_msg()
-initial_pose.pose.position.x = 0.54
-initial_pose.pose.position.y = -0.83
-initial_pose.pose.position.z = 0.01
-initial_pose.pose.orientation.w = 0.68
-initial_pose.pose.orientation.z = -0.74
-poses.append(initial_pose)
+from src.orchestrator import Orchestrator
+from argparse import ArgumentParser
+from src.generate_warehouse_map import generate_warehouse_numpy_map
 
-nav.followWaypoints(poses)
 
-while not nav.isTaskComplete():
-    print('hi')
+def main():
+    orchestrator = Orchestrator(
+        shelves=[],
+        size=(256, 256),
+    )
 
-result = nav.getResult()
-print(result)
+    orchestrator.add_robot("test", (0, 0, 0), (1, 1, 0))
+
+    InteractiveShellEmbed(
+        banner1="Orchestrator Console",
+        banner2=(
+            "## Usage:\n"
+            "## \t orchestrator."
+            "## \t orchestrator."
+        )
+    )
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument("--num_robots", type=int, default=5)
+    parser.add_argument("--requests_to_make", type=int, default=50)
+
+    args = parser.parse_args()
+
+    # load csv map
+    warehouse_map = generate_warehouse_numpy_map(map_file='../src/warehouse.csv')
+
+    main(warehouse_map_np=warehouse_map)
