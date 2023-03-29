@@ -2,13 +2,12 @@ import os
 import time
 
 from nav2_simple_commander.robot_navigator import BasicNavigator, PoseStamped
-import geometry_msgs
 import rclpy
 
-from src.motion_planners import (
+from ros2_ws.src.python_controllers.src.motion_planners import (
     AStarPlanner
 )
-from src.helpers import write_line_to_file
+from ros2_ws.src.python_controllers.src.helpers import write_line_to_file
 
 
 def get_point_from_pose(pose):

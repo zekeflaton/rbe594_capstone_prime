@@ -3,8 +3,8 @@ import pandas as pd
 
 from run_analysis_sim import run_analysis_sim
 
-from src.helpers import write_line_to_file
-from src.motion_planners import (
+from ros2_ws.src.python_controllers.src.helpers import write_line_to_file
+from ros2_ws.src.python_controllers.src.motion_planners import (
     AStarPlanner,
     BreadthFirstSearchPlanner,
     DepthFirstSearchPlanner,
@@ -16,7 +16,7 @@ def main(generate_data=False):
     """
     :param bool generate_data: Should the sim be run to generate data
     """
-    metrics_file_path = "../results"
+    metrics_file_path = "../../../../results"
     if generate_data:
         write_line_to_file(os.path.join(metrics_file_path, "compute_time_analysis.csv"),
                            ["motion_planner", "time_to_compute_path"], "w")

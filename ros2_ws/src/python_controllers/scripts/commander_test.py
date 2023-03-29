@@ -1,21 +1,21 @@
-from nav2_simple_commander.robot_navigator import BasicNavigator, PoseStamped
-import geometry_msgs
+from nav2_simple_commander.robot_navigator import BasicNavigator
 import rclpy
 
 from IPython.terminal.embed import InteractiveShellEmbed
 
-from src.orchestrator import Orchestrator
 from argparse import ArgumentParser
-from src.generate_warehouse_map import generate_warehouse_numpy_map
+from src.python_controllers.src.generate_warehouse_map import generate_warehouse_numpy_map
 
 
 def main():
-    orchestrator = Orchestrator(
-        shelves=[],
-        size=(256, 256),
-    )
-
-    orchestrator.add_robot("test", (0, 0, 0), (1, 1, 0))
+    rclpy.init()
+    nav = BasicNavigator()
+    # orchestrator = Orchestrator(
+    #     shelves=[],
+    #     size=(256, 256),
+    # )
+    #
+    # orchestrator.add_robot("test", (0, 0, 0), (1, 1, 0))
 
     InteractiveShellEmbed(
         banner1="Orchestrator Console",

@@ -1,4 +1,4 @@
-from src.robot import Robot, get_point_from_pose
+from ros2_ws.src.python_controllers.src.robot import Robot, get_point_from_pose
 
 
 class Orchestrator(object):
