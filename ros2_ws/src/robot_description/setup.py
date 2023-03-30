@@ -11,7 +11,8 @@ data_files=[
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name), glob('launch/*launch.[pxy][yma]*')),
         (os.path.join('share', package_name, 'world'), glob('world/*')),
-        (os.path.join('share', package_name, 'rviz'), glob('rviz/*'))
+        (os.path.join('share', package_name, 'rviz'), glob('rviz/*')),
+        # (os.path.join('share', package_name, 'config'), glob('config/*')),
     ]
 def package_files(data_files, directory_list):
 
