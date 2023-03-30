@@ -27,7 +27,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: PointCloud2
 Visualization Manager:
   Class: ""
   Displays:
@@ -64,8 +64,6 @@ Visualization Manager:
           Value: true
         left_wheel:
           Value: true
-        lidar:
-          Value: true
         piston:
           Value: true
         right_front_wheel:
@@ -92,8 +90,6 @@ Visualization Manager:
           left_rear_wheel:
             {}
           left_wheel:
-            {}
-          lidar:
             {}
           piston:
             tray:
@@ -122,6 +118,7 @@ Visualization Manager:
         Value: /camera1/image_raw
       Value: false
       Visibility:
+        "": true
         Grid: true
         Image: true
         RobotModel: true
@@ -168,10 +165,44 @@ Visualization Manager:
       Update Interval: 0
       Value: true
       Visual Enabled: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz_default_plugins/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 0
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Flat Squares
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /gazebo_ros_head_hokuyo_controllerrp/out
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: piston
+    Fixed Frame: carcaca
     Frame Rate: 30
   Name: root
   Tools:
@@ -214,7 +245,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 2.113112211227417
+      Distance: 2.7493350505828857
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -229,10 +260,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.23979757726192474
+      Pitch: 0.419797420501709
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.538530945777893
+      Yaw: 1.3835335969924927
     Saved: ~
 Window Geometry:
   Camera:
@@ -255,4 +286,4 @@ Window Geometry:
     collapsed: false
   Width: 1200
   X: 2084
-  Y: 210
+  Y: 197
