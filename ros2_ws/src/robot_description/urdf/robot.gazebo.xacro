@@ -15,7 +15,9 @@
 
   <gazebo>
     <plugin name="joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
-      <jointName>joint_piston, joint_tray</jointName>
+      <update_rate>2</update_rate>
+      <joint_name>joint_piston</joint_name>
+      <joint_name>joint_tray</joint_name>
     </plugin>
   </gazebo>
 
@@ -29,7 +31,7 @@
     <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
 
       <!-- Plugin update rate in Hz -->
-      <updateRate>50</updateRate>
+      <update_rate>50</update_rate>
 
       <!-- Name of left joint, defaults to `left_joint` -->
       <left_joint>joint_left_wheel</left_joint>
@@ -50,25 +52,25 @@
       <max_wheel_torque>3</max_wheel_torque>
 
       <!-- Topic to receive geometry_msgs/Twist message commands, defaults to `cmd_vel` -->
-      <commandTopic>cmd_vel</commandTopic>
+      <command_topic>cmd_vel</command_topic>
 
       <!-- Topic to publish nav_msgs/Odometry messages, defaults to `odom` -->
-      <odometryTopic>odom</odometryTopic>
+      <odometry_topic>odom</odometry_topic>
 
       <!-- Odometry frame, defaults to `odom` -->
-      <odometryFrame>odom</odometryFrame>
+      <odometry_frame>odom</odometry_frame>
 
       <!-- Robot frame to calculate odometry from, defaults to `base_footprint` -->
-      <robotBaseFrame>carcaca</robotBaseFrame>
+      <robot_base_frame>carcaca</robot_base_frame>
 
       <!-- Odometry source, 0 for ENCODER, 1 for WORLD, defaults to WORLD -->
       <odometrySource>1</odometrySource>
 
       <!-- Set to true to publish transforms for the wheel links, defaults to false -->
-      <publishWheelTF>false</publishWheelTF>
+      <publish_wheel_tf>false</publish_wheel_tf>
 
       <!-- Set to true to publish transforms for the odometry, defaults to true -->
-      <publishOdom>true</publishOdom>
+      <publish_odom>true</publish_odom>
 
       <!-- Set to true to publish sensor_msgs/JointState on /joint_states for the wheel joints, defaults to false -->
       <publishWheelJointState>true</publishWheelJointState>

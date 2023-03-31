@@ -12,7 +12,8 @@ def generate_launch_description():
     default_model_path = os.path.join(pkg_share, 'urdf/robot.urdf.xacro')
     default_rviz_config_path = os.path.join(pkg_share, 'rviz/robotmodel.rviz')
     doc = xacro.process_file(default_model_path, mappings={'radius': '0.9'})
-    world_path=os.path.join(pkg_share, 'world/warehouse.world')
+    # world_path=os.path.join(pkg_share, 'world/warehouse.world')
+    world_path=os.path.join(pkg_share, 'world/warehouse_with_apriltag.world')
     pkg_gazebo_ros = launch_ros.substitutions.FindPackageShare(package='gazebo_ros').find('gazebo_ros')
 
     spawn_entity = launch_ros.actions.Node(
