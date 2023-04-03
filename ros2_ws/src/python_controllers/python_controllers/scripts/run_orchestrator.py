@@ -1,8 +1,8 @@
 import asyncio
-from ros2_ws.src.python_controllers.src.orchestrator import Orchestrator
+from ros2_ws.src.python_controllers import Orchestrator
 from argparse import ArgumentParser
-from ros2_ws.src.python_controllers.src.generate_warehouse_map import generate_warehouse_numpy_map
-from ros2_ws.src.python_controllers.src.helpers import RobotPath, Counter
+from ros2_ws.src.python_controllers import generate_warehouse_numpy_map
+from ros2_ws.src.python_controllers import RobotPath, Counter
 
 
 async def main(warehouse_map_np):
