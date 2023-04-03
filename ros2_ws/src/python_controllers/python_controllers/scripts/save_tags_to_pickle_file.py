@@ -1,79 +1,14 @@
-from nav2_simple_commander.robot_navigator import BasicNavigator
-import rclpy
-
-from IPython.terminal.embed import InteractiveShellEmbed
 from IPython import embed
 
 from argparse import ArgumentParser
-# from src.python_controllers.src.generate_warehouse_map import generate_warehouse_numpy_map
-import xml.etree.ElementTree as ET
+import pickle
 
 
 def main():
-    # Console 1:
-    # cd ~/rbe594_capstone_prime/ros2_ws
-    # . install/setup.bash
-    # ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False
-
-    # Console 2:
+    # Console:
     # cd ~/rbe594_capstone_prime/ros2_ws/src/python_controllers/scripts
     # python3 commander_test.py
 
-    print("got to main")
-    # rclpy.init()
-    # nav = BasicNavigator()
-
-    # cost_map = nav.getGlobalCostmap()
-    # print(cost_map)
-    # print(type(cost_map))
-
-
-    # cost_map_array = list(cost_map)
-    # print(type(cost_map_array))
-    # orchestrator = Orchestrator(
-    #     shelves=[],
-    #     size=(256, 256),
-    # )
-    #
-    # orchestrator.add_robot("test", (0, 0, 0), (1, 1, 0))
-    print("start embed")
-    # embed()
-    # InteractiveShellEmbed(
-    #     banner1="Orchestrator Console",
-    #     banner2=(
-    #         "## Usage:\n"
-    #         "## \t orchestrator."
-    #         "## \t orchestrator."
-    #     )
-    # )
-    print("end embed")
-    # QR codes are half a meter apart
-    # Dont need cost map but could use global cost map
-    # Want to go from arcuo tag to arcuo tag
-    # tree = ET.parse("../../robot_description/world/warehouse_with_apriltag.world")
-    # root = tree.getroot()
-    # for child1 in root:
-    #     print(child1.tag)
-    #     for child2 in child1:
-    #         if "tag" in child2.attrib.get("name", "None"):
-    #             # print(child2)
-    #             print(dir(child2))
-    #             print(child2.text)
-    #             print(child2.attrib)
-
-
-if __name__ == "__main__":
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument("--num_robots", type=int, default=5)
-    parser.add_argument("--requests_to_make", type=int, default=50)
-
-    args = parser.parse_args()
-
-    # load csv map
-    # warehouse_map = generate_warehouse_numpy_map(map_file='../src/warehouse.csv')
-
-    main()
-    import pickle
     tags = {
         "tag1": (-4.0, -4.0, 0.011, 0, 0, 0),
         "tag2": (-4.0, -3.5, 0.011, 0, 0, 0),
@@ -364,3 +299,17 @@ if __name__ == "__main__":
     with open("../src/tags_file.pkl", 'wb') as fp:
         pickle.dump(tags, fp)
         print('dictionary saved successfully to file')
+
+    # print("start embed")
+    # embed()
+    # print("end embed")
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument("--num_robots", type=int, default=5)
+    parser.add_argument("--requests_to_make", type=int, default=50)
+
+    args = parser.parse_args()
+
+    main()

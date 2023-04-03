@@ -28,3 +28,9 @@ Run these commands to ensure the Gazebo world loads
 To fire up the gazebo sim type the following from inside the ROS workspace
 1. `roscose`
 2. `ros2 launch robot_description display.launch.py`
+
+
+To fire up gazebo nav2 test
+1. cd ~/rbe594_capstone_prime/ros2_ws
+2. . install/setup.bash
+3. ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False

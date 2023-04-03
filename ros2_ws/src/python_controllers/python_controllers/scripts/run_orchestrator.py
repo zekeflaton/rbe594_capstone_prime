@@ -1,11 +1,10 @@
-import asyncio
 from ros2_ws.src.python_controllers import Orchestrator
 from argparse import ArgumentParser
 from ros2_ws.src.python_controllers import generate_warehouse_numpy_map
 from ros2_ws.src.python_controllers import RobotPath, Counter
 
 
-async def main(warehouse_map_np):
+def main():
     """
 
     :param numpy.ndarray warehouse_map_np: 3D image array.  2D provides floor layout and third D provides obstacle info
@@ -83,7 +82,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # load csv map
-    warehouse_map = generate_warehouse_numpy_map(map_file='../src/warehouse.csv')
-
-    asyncio.create_task(main(warehouse_map_np=warehouse_map))
+    main()
