@@ -1,10 +1,13 @@
 import os
 import time
 
-from src.motion_planners import (
+from nav2_simple_commander.robot_navigator import BasicNavigator, PoseStamped
+import rclpy
+
+from ros2_ws.src.python_controllers import (
     AStarPlanner
 )
-from src.helpers import write_line_to_file
+from ros2_ws.src.python_controllers import write_line_to_file
 
 
 def get_point_from_pose(pose):
@@ -100,6 +103,8 @@ class Robot(object):
         self.charge_locations = charge_locations
         self.has_shelf = False
         self.metrics_file_path = metrics_file_path
+        rclpy.init()
+        self._nav = BasicNavigator()
 
     def plan_path(self):
         """
@@ -228,7 +233,31 @@ class Robot(object):
             # TODO change this hardcoded value to something based on research
             self.battery_charge.charge_battery(5)
         else:
-            self.current_pose = self._path.pop(0)
+            waypoints = []
+            while self._path:
+
+                next_path_pose = self._path.pop(0)
+                print(next_path_pose)
+                # Set our demo's initial pose
+                next_pose_stamped = PoseStamped()
+                next_pose_stamped.header.frame_id = 'map'
+                next_pose_stamped.header.stamp = self._nav.get_clock().now().to_msg()
+                next_pose_stamped.pose.position.x = -1.81
+                next_pose_stamped.pose.position.y = -0.53
+                next_pose_stamped.pose.orientation.w = 1.0
+                next_pose_stamped.pose.position.z = 0.0
+                next_pose_stamped.pose.orientation.z = 0.01
+                waypoints.append(next_pose_stamped)
+            self._nav.followWaypoints(waypoints)
+            while not self._nav.isTaskComplete():
+                feedback = self._nav.getFeedback()
+                print(feedback)
+                # if feedback.navigation_duration > 600:
+                #     self._nav.cancelTask()
+
+            result = self._nav.getResult()
+            print(result)
+
             for observer in self.observers:
                 observer.__call__(self.current_pose)
             # TODO remove this hardcoded drain amount with a value based on load, turning, movement, etc

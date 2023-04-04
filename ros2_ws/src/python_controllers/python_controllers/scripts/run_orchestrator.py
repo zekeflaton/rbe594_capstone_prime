@@ -1,38 +1,32 @@
-from PIL import Image
-from src.orchestrator import Orchestrator
+from ros2_ws.src.python_controllers import Orchestrator
 from argparse import ArgumentParser
-from src.generate_warehouse_map import generate_warehouse_numpy_map
-from src.helpers import RobotPath, Counter
+from ros2_ws.src.python_controllers import generate_warehouse_numpy_map
+from ros2_ws.src.python_controllers import RobotPath, Counter
 
 
-def run_analysis_sim(num_of_robots, shelves_to_grab, motion_planner=None, metrics_file_path=None):
+def main():
     """
 
-    :param int num_of_robots:  Indicates the number of robots to place
-    :param shelves_to_grab:
-    :param BaseMotionPlanner/None motion_planner: Optional override for a motion planner class
-    :param str/None metrics_file_path: Optional file path to save metrics
+    :param numpy.ndarray warehouse_map_np: 3D image array.  2D provides floor layout and third D provides obstacle info
+    :return:
     """
 
-    # load csv map
-    ary_map = generate_warehouse_numpy_map(map_file='../src/warehouse.csv')
     obstacles = set()
-    size = ary_map.shape
+    size = warehouse_map_np.shape
     robots = []
     charging_stations = []
-
 
     # identify the position of all the shelves
     # in the warehouse. Each robot will use a
     # shelf as its goal pose, so just take the first
     # n shelves encountered as goal poses
-    for i in range(ary_map.shape[0]):
-        for j in range(ary_map.shape[1]):
-            px = sum(ary_map[i, j])
+    for i in range(warehouse_map_np.shape[0]):
+        for j in range(warehouse_map_np.shape[1]):
+            px = sum(warehouse_map_np[i, j])
             if px == 0:
                 obstacles.add((i, j))
             if px == 255:
-                charging_stations.append((i,j,0))
+                charging_stations.append((i, j, 0))
 
     # add a robot to each charging station
     if num_of_robots > len(charging_stations):
@@ -46,8 +40,6 @@ def run_analysis_sim(num_of_robots, shelves_to_grab, motion_planner=None, metric
 
     goals = [(x[0], x[1], 0) for x in shelf_list[:shelves_to_grab]]
 
-    
-
     # track the number of deadlocks detected
     deadlock_counter = Counter()
 
@@ -57,15 +49,9 @@ def run_analysis_sim(num_of_robots, shelves_to_grab, motion_planner=None, metric
         motion_planner=motion_planner,
         metrics_file_path=metrics_file_path
     )
-    orchestrator = Orchestrator(
-        shelves=obstacles,
-        size=size,
-        motion_planner=motion_planner,
-        metrics_file_path=metrics_file_path
-    )
     # register the deadlock observer
-    orchestrator.subscribe_to_deadlock(lambda _: deadlock_counter.increment())
-    
+    # orchestrator.subscribe_to_deadlock(lambda _: deadlock_counter.increment())
+
     robot_paths = []
 
     # init each robot
@@ -73,9 +59,9 @@ def run_analysis_sim(num_of_robots, shelves_to_grab, motion_planner=None, metric
         goal = goals.pop()
         robot = orchestrator.add_robot(count, start, goal)
         robot_paths.append(RobotPath(count))
-        
+
         # register the move observer to track
-        # the robot path        
+        # the robot path
         robot.subscribe_to_movement(robot_paths[-1].add_to_path)
         robots.append(robot)
 
@@ -88,14 +74,6 @@ def run_analysis_sim(num_of_robots, shelves_to_grab, motion_planner=None, metric
     while not orchestrator.is_done():
         orchestrator.move_all()
 
-    # save the result jpg
-    result_png = Image.fromarray(ary_map)
-    result_png.save('../results/result.png')
-    result_resized = result_png.resize((600, 600), Image.NEAREST)
-    result_resized.save('../results/result_resized.png')
-    print("Total number of deadlocks: {} with {} robots".format(deadlock_counter.count, num_of_robots))
-    return deadlock_counter.count, robot_paths
-
 
 if __name__ == "__main__":
     parser = ArgumentParser(add_help=False)
@@ -103,4 +81,5 @@ if __name__ == "__main__":
     parser.add_argument("--requests_to_make", type=int, default=50)
 
     args = parser.parse_args()
-    run_analysis_sim(args.num_robots, args.requests_to_make)
+
+    main()
