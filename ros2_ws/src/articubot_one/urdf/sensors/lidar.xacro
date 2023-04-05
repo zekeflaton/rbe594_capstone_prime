@@ -55,13 +55,13 @@
     <collision name="laser_frame_collision">
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
-        <mesh filename="$(find articubot_one)/models/laser_robot/lidar/meshes/lidar.obj" scale="0.5 0.5 0.5" />
+        <mesh filename="$(find warehouse_robot)/models/laser_robot/lidar/meshes/lidar.obj" scale="0.5 0.5 0.5" />
       </geometry>
     </collision>
     <visual name="laser_frame_visual">
       <origin rpy="0 1.57 1.57" xyz="0 0 0" />
       <geometry>
-        <mesh filename="$(find articubot_one)/models/laser_robot/lidar/meshes/lidar.obj" scale="0.5 0.5 0.5" />
+        <mesh filename="$(find warehouse_robot)/models/laser_robot/lidar/meshes/lidar.obj" scale="0.5 0.5 0.5" />
       </geometry>
     </visual>
   </link>

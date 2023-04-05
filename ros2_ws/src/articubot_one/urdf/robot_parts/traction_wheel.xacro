@@ -33,13 +33,13 @@
             <collision name="${prefix}_collision">
                 <origin rpy="0 0 0" xyz="0 0 0" />
                 <geometry>
-                    <mesh filename="$(find articubot_one)/models/laser_robot/wheel/meshes/roda.obj" scale="1 1 1" />
+                    <mesh filename="$(find warehouse_robot)/models/laser_robot/wheel/meshes/roda.obj" scale="1 1 1" />
                 </geometry>
             </collision>
             <visual name="${prefix}_visual">
                 <origin rpy="0 0 0" xyz="0 0 0" />
                 <geometry>
-                    <mesh filename="$(find articubot_one)/models/laser_robot/wheel/meshes/roda.obj" scale="1 1 1" />
+                    <mesh filename="$(find warehouse_robot)/models/laser_robot/wheel/meshes/roda.obj" scale="1 1 1" />
                 </geometry>
             </visual>
         </link>
