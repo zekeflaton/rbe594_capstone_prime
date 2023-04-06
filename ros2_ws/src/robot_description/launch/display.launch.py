@@ -6,7 +6,7 @@ import os
 def generate_launch_description():
     pkg_share = launch_ros.substitutions.FindPackageShare(package='robot_description').find('robot_description')
     default_model_path = os.path.join(pkg_share, 'urdf/robot.urdf.xacro')
-    world_path=os.path.join(pkg_share, 'world/my_world.sdf')
+    world_path=os.path.join(pkg_share, 'world/warehouse.world')
     default_rviz_config_path = os.path.join(pkg_share, 'rviz/robotmodel.rviz')
 
     robot_state_publisher_node = launch_ros.actions.Node(
@@ -62,5 +62,5 @@ def generate_launch_description():
         robot_state_publisher_node,
         # robot_localization_node,
         spawn_entity,
-        rviz_node
+        # rviz_node
     ])
