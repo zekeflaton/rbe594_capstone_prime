@@ -1,5 +1,7 @@
 import os
+import pickle
 import time
+import math
 
 from nav2_simple_commander.robot_navigator import BasicNavigator, PoseStamped
 import rclpy
@@ -71,8 +73,9 @@ class BatteryCharge(object):
 
 class Robot(object):
 
-    def __init__(self, robot_name, obstacles, charge_locations, orchestrator, max_x, max_y, initial_pose, end_pose=(None, None, None),
-                 motion_planner=None, metrics_file_path=None):
+    def __init__(self, robot_name, obstacles, charge_locations, orchestrator, max_x, max_y, initial_pose,
+                 end_pose=(None, None, None), motion_planner=None, metrics_file_path=None,
+                 tags_filepath="../src/tags_file.pkl"):
         """
 
         :param str robot_name: name of the robot
@@ -85,6 +88,8 @@ class Robot(object):
         :param Tuple end_pose: x,y of end point
         :param BaseMotionPlanner/None motion_planner: Optional override for a motion planner class
         :param str/None metrics_file_path: Optional file path to save metrics
+        :param str tags_filepath: File path where april tag information is saved
+
         """
         self._path = []
         self.robot_name = robot_name
@@ -105,6 +110,9 @@ class Robot(object):
         self.metrics_file_path = metrics_file_path
         rclpy.init()
         self._nav = BasicNavigator()
+        with open(tags_filepath, 'rb') as fp:
+            self.tags = pickle.load(fp)
+            print('tags dictionary saved loaded from file')
 
     def plan_path(self):
         """
@@ -171,15 +179,15 @@ class Robot(object):
         # test which axis the robot is aligned on
         # add forward and backward moves
         is_y_aligned = theta_base % 180 == 0
+        movement = 0.5
         if is_y_aligned:
-            coordinates.append((x_base, y_base + 1, theta_base))
-            coordinates.append((x_base, y_base - 1, theta_base))
+            coordinates.append((x_base, y_base + movement, theta_base))
+            coordinates.append((x_base, y_base - movement, theta_base))
         else:
-            coordinates.append((x_base + 1, y_base, theta_base))
-            coordinates.append((x_base - 1, y_base, theta_base))
+            coordinates.append((x_base + movement, y_base, theta_base))
+            coordinates.append((x_base - movement, y_base, theta_base))
 
         # correct turns in edge cases
-
         ccw_turn = theta_base - 90
         if ccw_turn < 0:
             ccw_turn = 270
@@ -192,26 +200,27 @@ class Robot(object):
         coordinates.append((x_base, y_base, cw_turn))
 
         for x, y, theta in coordinates:
-            if self.is_cord_inbounds((x, y, theta)) and (not self.orchestrator.is_pt_locked((x, y)) or (x, y) == (self.shelf_pose[0], self.shelf_pose[1])):
+            # Ensure that the location has a valid tag and that the orchestrator has not locked the point
+            if not self.orchestrator.is_pt_locked((x, y)) and (x, y, 0.011, 0, 0, 0) in self.tags.values():
                 all_possible_actions.append(((x, y, theta), motion_planner.cost((x, y, theta), self.end_pose)))
         
         return all_possible_actions
 
-    def is_cord_inbounds(self, pose):
-        """
-        :param tuple pose: Tuple of ints giving the (x, y, theta) position as the source for new actions
-        :return: bool: Is the coordinate inside the bounds of the map
-        """
-        x, y, theta = pose
-        return 0 <= x < self.max_x and 0 <= y < self.max_y and 0 <= theta <= 360
-
-    def is_cord_blocked_by_obstacle(self, pose):
-        """
-        :param tuple pose: Tuple of ints giving the (x, y, theta) position as the source for new actions
-        :return: bool: Is the coordinate blocked by an obstacle
-        """
-        pt = get_point_from_pose(pose)
-        return pt in self.obstacles
+    # def is_cord_inbounds(self, pose):
+    #     """
+    #     :param tuple pose: Tuple of ints giving the (x, y, theta) position as the source for new actions
+    #     :return: bool: Is the coordinate inside the bounds of the map
+    #     """
+    #     x, y, theta = pose
+    #     return 0 <= x < self.max_x and 0 <= y < self.max_y and 0 <= theta <= 360
+    #
+    # def is_cord_blocked_by_obstacle(self, pose):
+    #     """
+    #     :param tuple pose: Tuple of ints giving the (x, y, theta) position as the source for new actions
+    #     :return: bool: Is the coordinate blocked by an obstacle
+    #     """
+    #     pt = get_point_from_pose(pose)
+    #     return pt in self.obstacles
 
     def get_next_two_points(self):
         """
@@ -233,21 +242,29 @@ class Robot(object):
             # TODO change this hardcoded value to something based on research
             self.battery_charge.charge_battery(5)
         else:
-            waypoints = []
-            while self._path:
 
-                next_path_pose = self._path.pop(0)
-                print(next_path_pose)
-                # Set our demo's initial pose
-                next_pose_stamped = PoseStamped()
-                next_pose_stamped.header.frame_id = 'map'
-                next_pose_stamped.header.stamp = self._nav.get_clock().now().to_msg()
-                next_pose_stamped.pose.position.x = -1.81
-                next_pose_stamped.pose.position.y = -0.53
-                next_pose_stamped.pose.orientation.w = 1.0
-                next_pose_stamped.pose.position.z = 0.0
-                next_pose_stamped.pose.orientation.z = 0.01
-                waypoints.append(next_pose_stamped)
+            waypoints = []
+            # while self._path:
+            next_path_pose = self._path.pop(0)
+            print(next_path_pose)
+            # Set our demo's initial pose
+            # http://docs.ros.org/en/noetic/api/geometry_msgs/html/msg/PoseStamped.html
+            next_pose_stamped = PoseStamped()
+            next_pose_stamped.header.frame_id = 'map'
+            next_pose_stamped.header.stamp = self._nav.get_clock().now().to_msg()
+            next_pose_stamped.pose.position.x = next_path_pose[0]
+            next_pose_stamped.pose.position.y = next_path_pose[1]
+            next_pose_stamped.pose.position.z = 0.0
+            # http: // wiki.ros.org / tf2 / Tutorials / Quaternions
+            # https: // answers.unity.com / questions / 147712 / what - is -affected - by - the - w - in -quaternionxyzw.html
+            # https://www.programcreek.com/python/example/70252/geometry_msgs.msg.PoseStamped
+            quaternion = self.quaternion_from_euler(0, 0, math.radians(next_path_pose[2]))
+            next_pose_stamped.pose.orientation.x = quaternion[0]
+            next_pose_stamped.pose.orientation.y = quaternion[1]
+            next_pose_stamped.pose.orientation.z = quaternion[2]
+            next_pose_stamped.pose.orientation.w = quaternion[3]
+            waypoints.append(next_pose_stamped)
+
             self._nav.followWaypoints(waypoints)
             while not self._nav.isTaskComplete():
                 feedback = self._nav.getFeedback()
@@ -266,6 +283,30 @@ class Robot(object):
         # mark that the robot has reached the shelf
         if self.current_pose == self.shelf_pose:
             self.has_shelf = True
+
+    def quaternion_from_euler(self, roll, pitch, yaw):
+        """
+        Converts euler roll, pitch, yaw to quaternion (w in last place)
+        https://gist.github.com/salmagro/2e698ad4fbf9dae40244769c5ab74434
+
+        quat = [x, y, z, w]
+        Bellow should be replaced when porting for ROS 2 Python tf_conversions is done.
+        """
+        cy = math.cos(yaw * 0.5)
+        sy = math.sin(yaw * 0.5)
+        cp = math.cos(pitch * 0.5)
+        sp = math.sin(pitch * 0.5)
+        cr = math.cos(roll * 0.5)
+        sr = math.sin(roll * 0.5)
+
+        q = [0] * 4
+        q[0] = cy * cp * cr + sy * sp * sr
+        q[1] = cy * cp * sr - sy * sp * cr
+        q[2] = sy * cp * sr + cy * sp * cr
+        q[3] = sy * cp * cr - cy * sp * sr
+
+        return q
+
 
     def subscribe_to_movement(self, func):
         self.observers.append(func)
