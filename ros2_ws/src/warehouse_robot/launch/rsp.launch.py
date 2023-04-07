@@ -18,16 +18,10 @@ def generate_launch_description():
 
     # Process the URDF file
     pkg_path = os.path.join(get_package_share_directory('warehouse_robot'))
-    xacro_file = os.path.join(pkg_path,'urdf','robot.urdf.xacro')
+    xacro_file = os.path.join(pkg_path,'description','robot.urdf.xacro')
     # robot_description_config = xacro.process_file(xacro_file).toxml()
-    robot_description_config = Command(['xacro ', xacro_file,
-                                        ' use_ros2_control:=', use_ros2_control,
-                                        ' sim_mode:=', use_sim_time,
-                                        ' sensor_rplidar:=true',
-                                        ' sensor_lidar:=false',
-                                        ' sensor_imu:=true',
-                                        ' sensor_camera:=true'])
-
+    robot_description_config = Command(['xacro ', xacro_file, ' use_ros2_control:=', use_ros2_control, ' sim_mode:=', use_sim_time])
+    
     # Create a robot_state_publisher node
     params = {'robot_description': robot_description_config, 'use_sim_time': use_sim_time}
     node_robot_state_publisher = Node(
@@ -36,11 +30,7 @@ def generate_launch_description():
         output='screen',
         parameters=[params]
     )
-    joint_state_publisher_node = Node(
-        package='joint_state_publisher',
-        executable='joint_state_publisher',
-        name='joint_state_publisher'
-    )
+
 
     # Launch!
     return LaunchDescription([
@@ -53,6 +43,5 @@ def generate_launch_description():
             default_value='true',
             description='Use ros2_control if true'),
 
-        node_robot_state_publisher,
-        joint_state_publisher_node
+        node_robot_state_publisher
     ])

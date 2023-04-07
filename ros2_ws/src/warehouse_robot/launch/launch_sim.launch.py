@@ -58,18 +58,18 @@ def generate_launch_description():
     diff_drive_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["diff_cont", "--controller-manager-timeout", "30"],
+        arguments=["diff_cont"],
     )
 
     joint_broad_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_broad", "--controller-manager-timeout", "30"],
+        arguments=["joint_broad"],
     )
 
 
     # Code for delaying a node (I haven't tested how effective it is)
-    #
+    # 
     # First add the below lines to imports
     # from launch.actions import RegisterEventHandler
     # from launch.event_handlers import OnProcessExit
