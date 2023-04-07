@@ -7,6 +7,9 @@
   <maintainer email="zekeeflaton@gmail.com">zeke</maintainer>
   <license>TODO: License declaration</license>
 
+  <buildtool_depend>ament_python</buildtool_depend>
+  <buildtool_depend>rclpy</buildtool_depend>
+
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>
