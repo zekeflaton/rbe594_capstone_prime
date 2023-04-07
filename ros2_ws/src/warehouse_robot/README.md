@@ -13,8 +13,7 @@ the gazebo map loads correctly
 
 ros2 launch warehouse_robot launch_sim.launch.py world:=./src/warehouse_robot/worlds/warehouse.world use_sim_time:=true
 ros2 launch nav2_bringup localization_launch.py map:=./src/warehouse_robot/maps/empty_warehouse2.yaml use_sim_time:=true
-ros2 launch nav2_bringup navigation_launch.py use_sim_time:=true
-rviz2 -d ./src/warehouse/config/main.rviz
+ros2 launch nav2_bringup navigation_launch.py use_sim_time:=true map_subscribe_transient_local:=true
+rviz2 -d ./src/warehouse_robot/config/main.rviz
 
-you also may need to install some new apt packages...
-sudo apt install ros-humble-ros2-control ros-humble-ros2-controllers ros-humble-gazebo-ros2-control ros-humble-twist-mux
+Install required packages using `install_packages.bash`
