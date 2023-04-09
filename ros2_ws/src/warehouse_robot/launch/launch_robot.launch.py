@@ -43,7 +43,7 @@ def generate_launch_description():
             remappings=[('/cmd_vel_out','/diff_cont/cmd_vel_unstamped')]
         )
 
-
+    
 
 
     robot_description = Command(['ros2 param get --hide-type /robot_state_publisher robot_description'])
@@ -87,7 +87,7 @@ def generate_launch_description():
 
 
     # Code for delaying a node (I haven't tested how effective it is)
-    #
+    # 
     # First add the below lines to imports
     # from launch.actions import RegisterEventHandler
     # from launch.event_handlers import OnProcessExit

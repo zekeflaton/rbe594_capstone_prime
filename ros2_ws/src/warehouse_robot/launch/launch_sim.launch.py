@@ -69,7 +69,7 @@ def generate_launch_description():
 
 
     # Code for delaying a node (I haven't tested how effective it is)
-    #
+    # 
     # First add the below lines to imports
     # from launch.actions import RegisterEventHandler
     # from launch.event_handlers import OnProcessExit
