@@ -9,8 +9,11 @@ controller_manager:
     joint_broad:
       type: joint_state_broadcaster/JointStateBroadcaster
 
+    # joint_piston:
+      # type: position_controllers/JointGroupPositionController
+
     joint_piston:
-      type: position_controllers/JointGroupPositionController
+      type: forward_command_controller/ForwardCommandController
 
 diff_cont:
   ros__parameters:
@@ -74,5 +77,6 @@ diff_cont:
 joint_piston:
   ros__parameters:
 
-    joints: ['piston_joint']
-    interface_name: "position"
+    joints:
+      - piston_joint
+    interface_name: position

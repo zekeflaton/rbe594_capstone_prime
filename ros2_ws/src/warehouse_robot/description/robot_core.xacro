@@ -21,6 +21,7 @@
     <xacro:property name="piston_length" value="0.1"/>
     <xacro:property name="piston_radius" value="0.01"/>
     <xacro:property name="piston_mass" value="0.01"/>
+    <xacro:property name="piston_offset" value="${piston_length + chassis_height}"/>
     <xacro:property name="tray_height" value="0.01"/>
     <xacro:property name="tray_radius" value="0.1"/>
     <xacro:property name="tray_mass" value="0.1"/>
@@ -195,9 +196,10 @@
     <joint name="piston_joint" type="prismatic">
         <parent link="chassis"/>
         <child link="piston"/>
-        <origin xyz="0 0 ${piston_length}"/>
+        <origin xyz="${chassis_length/2} 0 ${piston_offset}"/>
         <axis xyz="0 0 1" />
-        <limit effort="0" lower="0" upper="0.04" velocity="0" />
+        <!-- <limit position="0" upper="10" lower="-10" /> -->
+        <limit effort="1000.0" lower="0" upper="10." velocity="0.5" />
     </joint>
 
     <link name="piston">
@@ -213,18 +215,19 @@
             </geometry>
         </collision>
         <xacro:inertial_cylinder mass="${piston_mass}" length="${piston_length}" radius="${piston_radius}">
-            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <origin xyz="${chassis_length/2} 0 ${piston_offset}" rpy="0 0 0"/>
         </xacro:inertial_cylinder>
     </link>
 
     <gazebo reference="piston">
         <material>Gazebo/White</material>
         <selfCollide>true</selfCollide>
-        <mu1 value="0.1" />
+        <gravity>0</gravity>
+        <!-- <mu1 value="0.1" />
         <mu2 value="0.1" />
         <kp value="10000000.0" />
         <kd value="10000" />
-        <fdir1 value="0 0 0" />
+        <fdir1 value="0 0 0" /> -->
     </gazebo>
 
     <!-- Tray -->
