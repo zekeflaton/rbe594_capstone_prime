@@ -1,22 +1,22 @@
 import os
+
 import pandas as pd
 
-from run_analysis_sim import run_analysis_sim
-
-from ros2_ws.src.python_controllers import write_line_to_file
 from ros2_ws.src.python_controllers import (
     AStarPlanner,
     BreadthFirstSearchPlanner,
     DepthFirstSearchPlanner,
     RandomPlanner
 )
+from ros2_ws.src.python_controllers import write_line_to_file
+from run_analysis_sim import run_analysis_sim
 
 
 def main(generate_data=False):
     """
     :param bool generate_data: Should the sim be run to generate data
     """
-    metrics_file_path = "../../../../../results"
+    metrics_file_path = "../../../../results"
 
     if generate_data:
         write_line_to_file(os.path.join(metrics_file_path, "path_efficiency_analysis.csv"),

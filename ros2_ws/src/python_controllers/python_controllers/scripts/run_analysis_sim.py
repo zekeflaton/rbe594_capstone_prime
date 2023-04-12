@@ -1,8 +1,10 @@
-from PIL import Image
-from ros2_ws.src.python_controllers import Orchestrator
 from argparse import ArgumentParser
-from ros2_ws.src.python_controllers import generate_warehouse_numpy_map
+
+from PIL import Image
+
+from ros2_ws.src.python_controllers import Orchestrator
 from ros2_ws.src.python_controllers import RobotPath, Counter
+from ros2_ws.src.python_controllers import generate_warehouse_numpy_map
 
 
 def run_analysis_sim(num_of_robots, shelves_to_grab, motion_planner=None, metrics_file_path=None):

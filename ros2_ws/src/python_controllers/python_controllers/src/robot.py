@@ -1,26 +1,19 @@
+import math
 import os
 import pickle
 import time
-import math
 
-from nav2_simple_commander.robot_navigator import BasicNavigator, PoseStamped
 import rclpy
+from nav2_simple_commander.robot_navigator import BasicNavigator
+from ros2_ws.src.python_controllers.python_controllers.helpers import (
+    write_line_to_file,
+    quaternion_from_euler,
+    create_pose_stamped
+)
 
 from ros2_ws.src.python_controllers import (
     AStarPlanner
 )
-from ros2_ws.src.python_controllers import write_line_to_file
-
-
-def get_point_from_pose(pose):
-    """
-    We do not want to account for theta when address deadlocks, so we need to consider only the x and y coordinates
-
-    :param Tuple(int) pose: (x, y, theta) pose of the robot
-    :return: Tuple(int) pt: (x, y) location of the robot
-    """
-    x, y, _ = pose
-    return x, y
 
 
 class BatteryCharge(object):
@@ -84,8 +77,8 @@ class Robot(object):
         :param src.orchestrator.Orchestrator orchestrator: Orchestrator passes a copy of itself in
         :param int max_x: max x of the grid
         :param int max_y: max y of the grid
-        :param Tuple initial_pose: x,y of start point
-        :param Tuple end_pose: x,y of end point
+        :param Tuple(float) initial_pose: (x, y, theta) of start point
+        :param Tuple(float) end_pose: (x, y, theta) of end point
         :param BaseMotionPlanner/None motion_planner: Optional override for a motion planner class
         :param str/None metrics_file_path: Optional file path to save metrics
         :param str tags_filepath: File path where april tag information is saved
@@ -249,7 +242,15 @@ class Robot(object):
             print(next_path_pose)
             # Set our demo's initial pose
             # http://docs.ros.org/en/noetic/api/geometry_msgs/html/msg/PoseStamped.html
-            next_pose_stamped = PoseStamped()
+            next_pose_stamped = create_pose_stamped(
+                nav=self._nav,
+                x=next_path_pose[0],
+                y=next_path_pose[1],
+                z=0,
+                roll=0,
+                pitch=0,
+                yaw=math.radians(next_path_pose[2])
+            )
             next_pose_stamped.header.frame_id = 'map'
             next_pose_stamped.header.stamp = self._nav.get_clock().now().to_msg()
             next_pose_stamped.pose.position.x = next_path_pose[0]
@@ -258,7 +259,7 @@ class Robot(object):
             # http: // wiki.ros.org / tf2 / Tutorials / Quaternions
             # https: // answers.unity.com / questions / 147712 / what - is -affected - by - the - w - in -quaternionxyzw.html
             # https://www.programcreek.com/python/example/70252/geometry_msgs.msg.PoseStamped
-            quaternion = self.quaternion_from_euler(0, 0, math.radians(next_path_pose[2]))
+            quaternion = quaternion_from_euler(0, 0, math.radians(next_path_pose[2]))
             next_pose_stamped.pose.orientation.x = quaternion[0]
             next_pose_stamped.pose.orientation.y = quaternion[1]
             next_pose_stamped.pose.orientation.z = quaternion[2]
@@ -283,30 +284,6 @@ class Robot(object):
         # mark that the robot has reached the shelf
         if self.current_pose == self.shelf_pose:
             self.has_shelf = True
-
-    def quaternion_from_euler(self, roll, pitch, yaw):
-        """
-        Converts euler roll, pitch, yaw to quaternion (w in last place)
-        https://gist.github.com/salmagro/2e698ad4fbf9dae40244769c5ab74434
-
-        quat = [x, y, z, w]
-        Bellow should be replaced when porting for ROS 2 Python tf_conversions is done.
-        """
-        cy = math.cos(yaw * 0.5)
-        sy = math.sin(yaw * 0.5)
-        cp = math.cos(pitch * 0.5)
-        sp = math.sin(pitch * 0.5)
-        cr = math.cos(roll * 0.5)
-        sr = math.sin(roll * 0.5)
-
-        q = [0] * 4
-        q[0] = cy * cp * cr + sy * sp * sr
-        q[1] = cy * cp * sr - sy * sp * cr
-        q[2] = sy * cp * sr + cy * sp * cr
-        q[3] = sy * cp * cr - cy * sp * sr
-
-        return q
-
 
     def subscribe_to_movement(self, func):
         self.observers.append(func)
