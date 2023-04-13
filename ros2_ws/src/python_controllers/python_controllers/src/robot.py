@@ -5,13 +5,13 @@ import time
 
 import rclpy
 from nav2_simple_commander.robot_navigator import BasicNavigator
-from ros2_ws.src.python_controllers.python_controllers.helpers import (
+from python_controllers.src.helpers import (
     write_line_to_file,
     quaternion_from_euler,
     create_pose_stamped
 )
 
-from ros2_ws.src.python_controllers import (
+from python_controllers.src.motion_planners import (
     AStarPlanner
 )
 
@@ -171,21 +171,21 @@ class Robot(object):
         x_base, y_base, theta_base = pose
         # test which axis the robot is aligned on
         # add forward and backward moves
-        is_y_aligned = theta_base % 180 == 0
+        is_x_aligned = theta_base % 180 == 0
         movement = 0.5
-        if is_y_aligned:
-            coordinates.append((x_base, y_base + movement, theta_base))
-            coordinates.append((x_base, y_base - movement, theta_base))
-        else:
+        if is_x_aligned:
             coordinates.append((x_base + movement, y_base, theta_base))
             coordinates.append((x_base - movement, y_base, theta_base))
+        else:
+            coordinates.append((x_base, y_base + movement, theta_base))
+            coordinates.append((x_base, y_base - movement, theta_base))
 
         # correct turns in edge cases
-        ccw_turn = theta_base - 90
+        ccw_turn = theta_base - 90  # 90 degrees
         if ccw_turn < 0:
-            ccw_turn = 270
-        cw_turn = theta_base + 90
-        if cw_turn > 270:
+            ccw_turn = 270  # 270 degrees
+        cw_turn = theta_base + 90  # 90 degrees
+        if cw_turn > 270:  # 270 degrees
             cw_turn = 0
 
         # add possible turns
@@ -244,26 +244,16 @@ class Robot(object):
             # http://docs.ros.org/en/noetic/api/geometry_msgs/html/msg/PoseStamped.html
             next_pose_stamped = create_pose_stamped(
                 nav=self._nav,
-                x=next_path_pose[0],
-                y=next_path_pose[1],
-                z=0,
-                roll=0,
-                pitch=0,
-                yaw=math.radians(next_path_pose[2])
+                x=next_path_pose[0] * 1.,  # convert to a float
+                y=next_path_pose[1] * 1.,  # convert to a float
+                z=0 * 1.,  # convert to a float
+                roll=0 * 1.,  # convert to a float
+                pitch=0 * 1.,  # convert to a float
+                yaw=next_path_pose[2] * 1.,  # convert to a float
             )
-            next_pose_stamped.header.frame_id = 'map'
-            next_pose_stamped.header.stamp = self._nav.get_clock().now().to_msg()
-            next_pose_stamped.pose.position.x = next_path_pose[0]
-            next_pose_stamped.pose.position.y = next_path_pose[1]
-            next_pose_stamped.pose.position.z = 0.0
             # http: // wiki.ros.org / tf2 / Tutorials / Quaternions
             # https: // answers.unity.com / questions / 147712 / what - is -affected - by - the - w - in -quaternionxyzw.html
             # https://www.programcreek.com/python/example/70252/geometry_msgs.msg.PoseStamped
-            quaternion = quaternion_from_euler(0, 0, math.radians(next_path_pose[2]))
-            next_pose_stamped.pose.orientation.x = quaternion[0]
-            next_pose_stamped.pose.orientation.y = quaternion[1]
-            next_pose_stamped.pose.orientation.z = quaternion[2]
-            next_pose_stamped.pose.orientation.w = quaternion[3]
             waypoints.append(next_pose_stamped)
 
             self._nav.followWaypoints(waypoints)
