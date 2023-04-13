@@ -171,13 +171,14 @@ class Robot(object):
         x_base, y_base, theta_base = pose
         # test which axis the robot is aligned on
         # add forward and backward moves
-        is_x_aligned = theta_base % 180 == 0
         movement = 0.5
-        if is_x_aligned:
+        if theta_base == 0:
             coordinates.append((x_base + movement, y_base, theta_base))
-            coordinates.append((x_base - movement, y_base, theta_base))
-        else:
+        elif theta_base == 90:
             coordinates.append((x_base, y_base + movement, theta_base))
+        elif theta_base == 180:
+            coordinates.append((x_base - movement, y_base, theta_base))
+        elif theta_base == 270:
             coordinates.append((x_base, y_base - movement, theta_base))
 
         # correct turns in edge cases
