@@ -46,3 +46,11 @@ ros2 launch nav2_bringup navigation_launch.py use_sim_time:=true map_subscribe_t
 rviz2 -d ./src/warehouse_robot/config/main.rviz
 
 Install required packages using `install_packages.bash`
+
+### For April Tag Detection
+1. $sudo apt-get install ros-humble-apriltag-ros
+2. go to ros2_ws folder structure and run colcon build
+3. run in one terminal --> $ros2 run apriltag_ros apriltag_node --ros-args     -r image_rect:=/camera1/image_raw     -r camera_info:=/camera1/camera_info
+4. the above point publishes the detection output in the topic /detections
+5. go to folder ~/rbe594_capstone_prime/ros2_ws/src/scripts
+6. run in another terminal --> python3 det_pose.py
