@@ -43,7 +43,7 @@
 
         <link name="grani_hori_1">
             <pose>4.423 19.633 0.875 0 0 0</pose>
-            <static>true</static>
+            <static>false</static>
             <inertial>
                 <mass>1.0</mass>
                 <inertia>
