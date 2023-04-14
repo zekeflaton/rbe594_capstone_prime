@@ -1,6 +1,6 @@
-from PIL import Image as im
-import pandas as pd
 import numpy as np
+import pandas as pd
+from PIL import Image as im
 
 
 def generate_warehouse_numpy_map(map_file='../src/warehouse.csv'):

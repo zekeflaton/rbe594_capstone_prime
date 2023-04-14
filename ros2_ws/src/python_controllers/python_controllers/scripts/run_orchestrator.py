@@ -1,6 +1,6 @@
-from ros2_ws.src.python_controllers import Orchestrator
 from argparse import ArgumentParser
-from ros2_ws.src.python_controllers import generate_warehouse_numpy_map
+
+from ros2_ws.src.python_controllers import Orchestrator
 from ros2_ws.src.python_controllers import RobotPath, Counter
 
 

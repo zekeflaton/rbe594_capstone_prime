@@ -1,7 +1,5 @@
-from IPython import embed
-
-from argparse import ArgumentParser
 import pickle
+from argparse import ArgumentParser
 
 
 def main():

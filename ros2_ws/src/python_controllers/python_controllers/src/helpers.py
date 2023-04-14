@@ -1,4 +1,7 @@
+import math
+
 import numpy as np
+from nav2_simple_commander.robot_navigator import PoseStamped
 
 # create a global list of possible
 # RGB values
@@ -48,7 +51,85 @@ class Counter:
     def count(self):
         return self._count
 
+
 def write_line_to_file(filepath, array, open_mode="a"):
     with open(filepath, open_mode) as f:
         f.write(",".join(array))
         f.write("\n")
+
+
+def load_tags_dict(tags_filepath):
+    """
+    Load the pickled tags file into a dictionary object
+    :param str tags_filepath: filepath for the pickled tags
+    :return: dict tags: dictionary of tags.  key is tag name, value is tuple of (x,y,z, x_rot, y_rot, z_rot)
+    """
+    tags_filepath = "tags_file.pkl"
+    with open(tags_filepath, 'rb') as fp:
+        tags = pickle.load(fp)
+        print('tags dictionary saved loaded from file')
+
+
+def quaternion_from_euler(roll, pitch, yaw):
+    """
+    Converts euler roll, pitch, yaw to quaternion (w in last place)
+    https://gist.github.com/salmagro/2e698ad4fbf9dae40244769c5ab74434
+
+    :param float roll:
+    :param float pitch:
+    :param float yaw:
+    :param list(float) quat: (x, y, z, w)
+    Bellow should be replaced when porting for ROS 2 Python tf_conversions is done.
+    """
+    cy = math.cos(yaw * 0.5)
+    sy = math.sin(yaw * 0.5)
+    cp = math.cos(pitch * 0.5)
+    sp = math.sin(pitch * 0.5)
+    cr = math.cos(roll * 0.5)
+    sr = math.sin(roll * 0.5)
+
+    q = [0] * 4
+    # Change ordering because it was w,x,y,z.  so q[3] used to be q[0]
+    q[0] = cy * cp * sr - sy * sp * cr
+    q[1] = sy * cp * sr + cy * sp * cr
+    q[2] = sy * cp * cr - cy * sp * sr
+    q[3] = cy * cp * cr + sy * sp * sr
+
+    return q
+
+
+def get_point_from_pose(pose):
+    """
+    We do not want to account for theta when address deadlocks, so we need to consider only the x and y coordinates
+
+    :param Tuple(int) pose: (x, y, theta) pose of the robot
+    :return: Tuple(int) pt: (x, y) location of the robot
+    """
+    x, y, _ = pose
+    return x, y
+
+
+def create_pose_stamped(nav, x, y, z, roll, pitch, yaw):
+    """
+
+    :param nav2_simple_commander.robot_navigator.BasicNavigator nav:
+    :param float x:
+    :param float y:
+    :param float z:
+    :param float roll:
+    :param float pitch:
+    :param float yaw:
+    :return: nav2_simple_commander.robot_navigator.PoseStamped pose
+    """
+    pose_stamped = PoseStamped()
+    pose_stamped.header.frame_id = 'map'
+    pose_stamped.header.stamp = nav.get_clock().now().to_msg()
+    pose_stamped.pose.position.x = x
+    pose_stamped.pose.position.y = y
+    pose_stamped.pose.position.z = z
+    quaternion = quaternion_from_euler(math.radians(roll), math.radians(pitch), math.radians(yaw))
+    pose_stamped.pose.orientation.x = quaternion[0]
+    pose_stamped.pose.orientation.y = quaternion[1]
+    pose_stamped.pose.orientation.z = quaternion[2]
+    pose_stamped.pose.orientation.w = quaternion[3]
+    return pose_stamped

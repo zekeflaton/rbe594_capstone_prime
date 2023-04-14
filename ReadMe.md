@@ -15,7 +15,7 @@ Package installs:
 4. `sudo apt install ros-humble-xacro`
 
 Build Workspace inside `ros2_ws`
-1. `colcon build`
+1. `colcon build --symlink-install`
 2. `. install/setup.bash`
 
 Run these commands to ensure the Gazebo world loads
@@ -26,23 +26,22 @@ Run these commands to ensure the Gazebo world loads
 
 
 To fire up the gazebo sim type the following from inside the ROS workspace
-1. `roscose`
-2. `ros2 launch robot_description display.launch.py`
+1. `ros2 launch robot_description display.launch.py`
 
 
 To fire up gazebo nav2 test
-1. cd ~/rbe594_capstone_prime/ros2_ws
-2. . install/setup.bash
-3. ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False
+1. `cd ~/rbe594_capstone_prime/ros2_ws`
+2. `. install/setup.bash`
+3. `ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False`
 
 ### To run the code in src/warehouse_robot and launch the robot with nav integration
 Run these commands in their own terminals to get the whole system up and running. We can probably put all this into a single launch file.
 Run these from the ros2_ws directory after build & install. You should also have GAZEBO_MODEL_PATH include the models directory so that
 the gazebo map loads correctly
 
-ros2 launch warehouse_robot launch_sim.launch.py world:=./src/warehouse_robot/worlds/warehouse.world use_sim_time:=true
-ros2 launch nav2_bringup localization_launch.py map:=./src/warehouse_robot/maps/empty_warehouse2.yaml use_sim_time:=true
-ros2 launch nav2_bringup navigation_launch.py use_sim_time:=true map_subscribe_transient_local:=true
-rviz2 -d ./src/warehouse_robot/config/main.rviz
+1. ros2 launch warehouse_robot launch_sim.launch.py world:=./src/warehouse_robot/worlds/warehouse.world use_sim_time:=true
+2. ros2 launch nav2_bringup localization_launch.py map:=./src/warehouse_robot/maps/empty_warehouse2.yaml use_sim_time:=true
+3. ros2 launch nav2_bringup navigation_launch.py use_sim_time:=true map_subscribe_transient_local:=true
+4. rviz2 -d ./src/warehouse_robot/config/main.rviz
 
 Install required packages using `install_packages.bash`

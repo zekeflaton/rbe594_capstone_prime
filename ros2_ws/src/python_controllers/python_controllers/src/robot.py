@@ -1,24 +1,19 @@
+import math
 import os
+import pickle
 import time
 
-from nav2_simple_commander.robot_navigator import BasicNavigator, PoseStamped
 import rclpy
+from nav2_simple_commander.robot_navigator import BasicNavigator
+from python_controllers.src.helpers import (
+    write_line_to_file,
+    quaternion_from_euler,
+    create_pose_stamped
+)
 
-from ros2_ws.src.python_controllers import (
+from python_controllers.src.motion_planners import (
     AStarPlanner
 )
-from ros2_ws.src.python_controllers import write_line_to_file
-
-
-def get_point_from_pose(pose):
-    """
-    We do not want to account for theta when address deadlocks, so we need to consider only the x and y coordinates
-
-    :param Tuple(int) pose: (x, y, theta) pose of the robot
-    :return: Tuple(int) pt: (x, y) location of the robot
-    """
-    x, y, _ = pose
-    return x, y
 
 
 class BatteryCharge(object):
@@ -71,8 +66,9 @@ class BatteryCharge(object):
 
 class Robot(object):
 
-    def __init__(self, robot_name, obstacles, charge_locations, orchestrator, max_x, max_y, initial_pose, end_pose=(None, None, None),
-                 motion_planner=None, metrics_file_path=None):
+    def __init__(self, robot_name, obstacles, charge_locations, orchestrator, max_x, max_y, initial_pose,
+                 end_pose=(None, None, None), motion_planner=None, metrics_file_path=None,
+                 tags_filepath="../src/tags_file.pkl"):
         """
 
         :param str robot_name: name of the robot
@@ -81,10 +77,12 @@ class Robot(object):
         :param src.orchestrator.Orchestrator orchestrator: Orchestrator passes a copy of itself in
         :param int max_x: max x of the grid
         :param int max_y: max y of the grid
-        :param Tuple initial_pose: x,y of start point
-        :param Tuple end_pose: x,y of end point
+        :param Tuple(float) initial_pose: (x, y, theta) of start point
+        :param Tuple(float) end_pose: (x, y, theta) of end point
         :param BaseMotionPlanner/None motion_planner: Optional override for a motion planner class
         :param str/None metrics_file_path: Optional file path to save metrics
+        :param str tags_filepath: File path where april tag information is saved
+
         """
         self._path = []
         self.robot_name = robot_name
@@ -105,6 +103,9 @@ class Robot(object):
         self.metrics_file_path = metrics_file_path
         rclpy.init()
         self._nav = BasicNavigator()
+        with open(tags_filepath, 'rb') as fp:
+            self.tags = pickle.load(fp)
+            print('tags dictionary saved loaded from file')
 
     def plan_path(self):
         """
@@ -170,21 +171,22 @@ class Robot(object):
         x_base, y_base, theta_base = pose
         # test which axis the robot is aligned on
         # add forward and backward moves
-        is_y_aligned = theta_base % 180 == 0
-        if is_y_aligned:
-            coordinates.append((x_base, y_base + 1, theta_base))
-            coordinates.append((x_base, y_base - 1, theta_base))
-        else:
-            coordinates.append((x_base + 1, y_base, theta_base))
-            coordinates.append((x_base - 1, y_base, theta_base))
+        movement = 0.5
+        if theta_base == 0:
+            coordinates.append((x_base + movement, y_base, theta_base))
+        elif theta_base == 90:
+            coordinates.append((x_base, y_base + movement, theta_base))
+        elif theta_base == 180:
+            coordinates.append((x_base - movement, y_base, theta_base))
+        elif theta_base == 270:
+            coordinates.append((x_base, y_base - movement, theta_base))
 
         # correct turns in edge cases
-
-        ccw_turn = theta_base - 90
+        ccw_turn = theta_base - 90  # 90 degrees
         if ccw_turn < 0:
-            ccw_turn = 270
-        cw_turn = theta_base + 90
-        if cw_turn > 270:
+            ccw_turn = 270  # 270 degrees
+        cw_turn = theta_base + 90  # 90 degrees
+        if cw_turn > 270:  # 270 degrees
             cw_turn = 0
 
         # add possible turns
@@ -192,26 +194,27 @@ class Robot(object):
         coordinates.append((x_base, y_base, cw_turn))
 
         for x, y, theta in coordinates:
-            if self.is_cord_inbounds((x, y, theta)) and (not self.orchestrator.is_pt_locked((x, y)) or (x, y) == (self.shelf_pose[0], self.shelf_pose[1])):
+            # Ensure that the location has a valid tag and that the orchestrator has not locked the point
+            if not self.orchestrator.is_pt_locked((x, y)) and (x, y, 0.011, 0, 0, 0) in self.tags.values():
                 all_possible_actions.append(((x, y, theta), motion_planner.cost((x, y, theta), self.end_pose)))
         
         return all_possible_actions
 
-    def is_cord_inbounds(self, pose):
-        """
-        :param tuple pose: Tuple of ints giving the (x, y, theta) position as the source for new actions
-        :return: bool: Is the coordinate inside the bounds of the map
-        """
-        x, y, theta = pose
-        return 0 <= x < self.max_x and 0 <= y < self.max_y and 0 <= theta <= 360
-
-    def is_cord_blocked_by_obstacle(self, pose):
-        """
-        :param tuple pose: Tuple of ints giving the (x, y, theta) position as the source for new actions
-        :return: bool: Is the coordinate blocked by an obstacle
-        """
-        pt = get_point_from_pose(pose)
-        return pt in self.obstacles
+    # def is_cord_inbounds(self, pose):
+    #     """
+    #     :param tuple pose: Tuple of ints giving the (x, y, theta) position as the source for new actions
+    #     :return: bool: Is the coordinate inside the bounds of the map
+    #     """
+    #     x, y, theta = pose
+    #     return 0 <= x < self.max_x and 0 <= y < self.max_y and 0 <= theta <= 360
+    #
+    # def is_cord_blocked_by_obstacle(self, pose):
+    #     """
+    #     :param tuple pose: Tuple of ints giving the (x, y, theta) position as the source for new actions
+    #     :return: bool: Is the coordinate blocked by an obstacle
+    #     """
+    #     pt = get_point_from_pose(pose)
+    #     return pt in self.obstacles
 
     def get_next_two_points(self):
         """
@@ -233,21 +236,27 @@ class Robot(object):
             # TODO change this hardcoded value to something based on research
             self.battery_charge.charge_battery(5)
         else:
-            waypoints = []
-            while self._path:
 
-                next_path_pose = self._path.pop(0)
-                print(next_path_pose)
-                # Set our demo's initial pose
-                next_pose_stamped = PoseStamped()
-                next_pose_stamped.header.frame_id = 'map'
-                next_pose_stamped.header.stamp = self._nav.get_clock().now().to_msg()
-                next_pose_stamped.pose.position.x = -1.81
-                next_pose_stamped.pose.position.y = -0.53
-                next_pose_stamped.pose.orientation.w = 1.0
-                next_pose_stamped.pose.position.z = 0.0
-                next_pose_stamped.pose.orientation.z = 0.01
-                waypoints.append(next_pose_stamped)
+            waypoints = []
+            # while self._path:
+            next_path_pose = self._path.pop(0)
+            print(next_path_pose)
+            # Set our demo's initial pose
+            # http://docs.ros.org/en/noetic/api/geometry_msgs/html/msg/PoseStamped.html
+            next_pose_stamped = create_pose_stamped(
+                nav=self._nav,
+                x=next_path_pose[0] * 1.,  # convert to a float
+                y=next_path_pose[1] * 1.,  # convert to a float
+                z=0 * 1.,  # convert to a float
+                roll=0 * 1.,  # convert to a float
+                pitch=0 * 1.,  # convert to a float
+                yaw=next_path_pose[2] * 1.,  # convert to a float
+            )
+            # http: // wiki.ros.org / tf2 / Tutorials / Quaternions
+            # https: // answers.unity.com / questions / 147712 / what - is -affected - by - the - w - in -quaternionxyzw.html
+            # https://www.programcreek.com/python/example/70252/geometry_msgs.msg.PoseStamped
+            waypoints.append(next_pose_stamped)
+
             self._nav.followWaypoints(waypoints)
             while not self._nav.isTaskComplete():
                 feedback = self._nav.getFeedback()
