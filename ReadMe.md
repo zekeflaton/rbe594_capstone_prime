@@ -45,3 +45,13 @@ the gazebo map loads correctly
 4. rviz2 -d ./src/warehouse_robot/config/main.rviz
 
 Install required packages using `install_packages.bash`
+
+To control the robot and move it around the environment in the environment, run this command to start keyboard control
+- `ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r /cmd_vel:=/diff_cont/cmd_vel_unstamped`
+
+To move the piston up and down, run this command with `1.0` for up and `0.0` for down. The newline between 1 and 0 is required
+
+```
+ros2 topic pub -1 /joint_piston/commands std_msgs/msg/Float64MultiArray "data:
+> - 1.0"
+```
