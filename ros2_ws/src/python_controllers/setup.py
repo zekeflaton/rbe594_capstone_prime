@@ -6,13 +6,6 @@ from setuptools import setup
 
 package_name = 'python_controllers'
 
-# d = generate_distutils_setup(
-#     packages = ["python_controllers"],
-#     scripts=["scripts"],
-#     package_dir = {"": "src"}
-# )
-# setup(**d)
-
 setup(
     name=package_name,
     version='0.0.0',
@@ -21,7 +14,7 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ( os.path.join('share', package_name, 'src'), glob('src/*')),
+        (os.path.join('share', package_name, 'src'), glob('src/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
