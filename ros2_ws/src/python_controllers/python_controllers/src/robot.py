@@ -66,13 +66,12 @@ class BatteryCharge(object):
 
 class Robot(object):
 
-    def __init__(self, robot_name, obstacles, charge_locations, orchestrator, max_x, max_y, initial_pose,
+    def __init__(self, robot_name, charge_locations, orchestrator, max_x, max_y, initial_pose,
                  end_pose=(None, None, None), motion_planner=None, metrics_file_path=None,
                  tags_filepath="../src/tags_file.pkl"):
         """
 
         :param str robot_name: name of the robot
-        :param set(Tuple) obstacles: set of tuples representing blocked grids
         :param set(Tuple) charge_locations: set of tuples representing charging grids
         :param src.orchestrator.Orchestrator orchestrator: Orchestrator passes a copy of itself in
         :param int max_x: max x of the grid
@@ -86,7 +85,6 @@ class Robot(object):
         """
         self._path = []
         self.robot_name = robot_name
-        self.obstacles = obstacles
         self.max_x = max_x
         self.max_y = max_y
         self.current_pose = initial_pose
@@ -199,22 +197,6 @@ class Robot(object):
                 all_possible_actions.append(((x, y, theta), motion_planner.cost((x, y, theta), self.end_pose)))
         
         return all_possible_actions
-
-    # def is_cord_inbounds(self, pose):
-    #     """
-    #     :param tuple pose: Tuple of ints giving the (x, y, theta) position as the source for new actions
-    #     :return: bool: Is the coordinate inside the bounds of the map
-    #     """
-    #     x, y, theta = pose
-    #     return 0 <= x < self.max_x and 0 <= y < self.max_y and 0 <= theta <= 360
-    #
-    # def is_cord_blocked_by_obstacle(self, pose):
-    #     """
-    #     :param tuple pose: Tuple of ints giving the (x, y, theta) position as the source for new actions
-    #     :return: bool: Is the coordinate blocked by an obstacle
-    #     """
-    #     pt = get_point_from_pose(pose)
-    #     return pt in self.obstacles
 
     def get_next_two_points(self):
         """

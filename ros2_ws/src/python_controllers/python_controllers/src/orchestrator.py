@@ -5,12 +5,12 @@ from python_controllers.src.helpers import get_point_from_pose
 class Orchestrator(object):
     def __init__(self, shelves, size, motion_planner=None, metrics_file_path=None):
         """
-        Initialze the orchestrator
+        Initialize the orchestrator
 
-        :param shelves: array indicating locations of obstacles/shelves
-        :param size: size of the map (x, y)
-        :param BaseMotionPlanner/None motion_planner: Optional override for a motion planner class
-        :param str/None metrics_file_path: Optional file path to save metrics
+        :param dict shelves: dictionary of {shelf name:shelf location}
+        :param tuple(float) size: size of the map (x, y)
+        :param BaseMotionPlanner | None motion_planner: Optional override for a motion planner class
+        :param str | None metrics_file_path: Optional file path to save metrics
         """
         self.shelves = shelves
         self.size = size
@@ -38,7 +38,6 @@ class Orchestrator(object):
         """
         self.robots[robot_name] = Robot(
             robot_name=robot_name,
-            obstacles=self.shelves,
             charge_locations=self.charge_locations,
             orchestrator=self,
             max_x=self.size[0],

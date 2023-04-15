@@ -1,7 +1,8 @@
 import math
-
+import pickle
 import numpy as np
 from nav2_simple_commander.robot_navigator import PoseStamped
+
 
 # create a global list of possible
 # RGB values
@@ -58,16 +59,30 @@ def write_line_to_file(filepath, array, open_mode="a"):
         f.write("\n")
 
 
-def load_tags_dict(tags_filepath):
+def load_tags_dict(tags_filepath="tags_file.pkl"):
     """
     Load the pickled tags file into a dictionary object
+
     :param str tags_filepath: filepath for the pickled tags
     :return: dict tags: dictionary of tags.  key is tag name, value is tuple of (x,y,z, x_rot, y_rot, z_rot)
     """
-    tags_filepath = "tags_file.pkl"
     with open(tags_filepath, 'rb') as fp:
         tags = pickle.load(fp)
-        print('tags dictionary saved loaded from file')
+        print('tags dictionary successfully loaded from file')
+    return tags
+
+
+def load_shelves_dict(shelves_filepath="../src/shelves_file.pkl"):
+    """
+    Load the pickled shelves file into a dictionary object
+
+    :param str shelves_filepath: filepath for the pickled shelves dict
+    :return: dict shelves: {shelf_name: (x, y, z, roll, pitch, yaw}
+    """
+    with open(shelves_filepath, 'rb') as fp:
+        shelves = pickle.load(fp)
+        print('shelves dictionary successfully loaded from file')
+    return shelves
 
 
 def quaternion_from_euler(roll, pitch, yaw):
