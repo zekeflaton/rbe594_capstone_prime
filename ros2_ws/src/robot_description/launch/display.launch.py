@@ -1,16 +1,7 @@
 import launch
 from launch.substitutions import Command, LaunchConfiguration
 import launch_ros
-
 import os
-from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.conditions import IfCondition, UnlessCondition
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command, LaunchConfiguration, PythonExpression
-from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
-
 
 def generate_launch_description():
     pkg_share = launch_ros.substitutions.FindPackageShare(package='robot_description').find('robot_description')
@@ -55,22 +46,6 @@ def generate_launch_description():
     #    output='screen',
     #    parameters=[os.path.join(pkg_share, 'config/ekf.yaml'), {'use_sim_time': LaunchConfiguration('use_sim_time')}]
     # )
-
-    # https://automaticaddison.com/how-to-send-waypoints-to-the-ros-2-navigation-stack-nav-2/
-    # Launch the ROS 2 Navigation Stack
-    start_ros2_navigation_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(nav2_launch_dir, 'bringup_launch.py')),
-        launch_arguments={'namespace': namespace,
-                          'use_namespace': use_namespace,
-                          'slam': slam,
-                          'map': map_yaml_file,
-                          'use_sim_time': use_sim_time,
-                          'params_file': params_file,
-                          'autostart': autostart}.items())
-
-    # Create the launch description and populate
-    ld = launch.LaunchDescription()
-
     return launch.LaunchDescription([
         # launch.actions.DeclareLaunchArgument(name='gui', default_value='True',
                                             # description='Flag to enable joint_state_publisher_gui'),
