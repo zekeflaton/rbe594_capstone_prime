@@ -41,7 +41,7 @@
   </gazebo>
 
   <joint name="laser_joint" type="fixed">
-    <parent link="base_link" />
+    <parent link="carcaca" />
     <child link="laser_frame" />
     <origin rpy="0 0 -1.57" xyz="-0.0005 -0.23 0.109" />
   </joint>

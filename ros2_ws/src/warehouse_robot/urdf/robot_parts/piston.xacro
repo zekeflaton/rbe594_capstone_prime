@@ -2,8 +2,8 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
     <xacro:macro name="piston" params="prefix">
-        <joint name="${prefix}_joint" type="prismatic">
-            <parent link="base_link" />
+        <joint name="joint_${prefix}" type="prismatic">
+            <parent link="carcaca" />
             <child link="${prefix}" />
             <dynamics friction="5.0" />
             <origin rpy="0 0 0" xyz="0 0 0.1318" />

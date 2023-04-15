@@ -4,7 +4,7 @@
 
     <xacro:macro name="traction_wheel" params="prefix pos_X pos_Y pos_Z pos_r pos_p pos_y">
         <joint name="${prefix}_joint" type="continuous">
-            <parent link="base_link" />
+            <parent link="carcaca" />
             <child link="${prefix}" />
             <origin rpy="${pos_r} ${pos_p} ${pos_y}" xyz="${pos_X} ${pos_Y} ${pos_Z}" />
             <axis xyz="0 0 1" />
