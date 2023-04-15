@@ -18,6 +18,14 @@
     <xacro:property name="caster_wheel_mass" value="0.01"/>
     <xacro:property name="caster_wheel_offset_x" value="0.075"/>
     <xacro:property name="caster_wheel_offset_z" value="${wheel_offset_z - wheel_radius + caster_wheel_radius}"/>
+    <xacro:property name="piston_length" value="0.1"/>
+    <xacro:property name="piston_radius" value="0.01"/>
+    <xacro:property name="piston_mass" value="0.01"/>
+    <xacro:property name="piston_offset" value="${piston_length + chassis_height}"/>
+    <xacro:property name="tray_height" value="0.01"/>
+    <xacro:property name="tray_radius" value="0.1"/>
+    <xacro:property name="tray_mass" value="0.1"/>
+    <xacro:property name="tray_offset" value="${piston_length/2}"/>
 
     <material name="white">
         <color rgba="1 1 1 1" />
@@ -182,6 +190,67 @@
         <material>Gazebo/White</material>
         <mu1 value="0.001"/>
         <mu2 value="0.001"/>
+    </gazebo>
+
+    <!-- Piston -->
+    <joint name="piston_joint" type="prismatic">
+        <parent link="chassis"/>
+        <child link="piston"/>
+        <origin xyz="${chassis_length/2} 0 ${piston_offset}"/>
+        <axis xyz="0 0 1" />
+        <!-- <limit position="0" upper="10" lower="-10" /> -->
+        <limit effort="1000.0" lower="0" upper="10." velocity="0.5" />
+    </joint>
+
+    <link name="piston">
+        <visual>
+            <geometry>
+                <cylinder radius="${piston_radius}" length="${piston_length}"/>
+            </geometry>
+            <material name="white"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="${piston_radius}" length="${piston_length}"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_cylinder mass="${piston_mass}" length="${piston_length}" radius="${piston_radius}">
+            <origin xyz="${chassis_length/2} 0 ${piston_offset}" rpy="0 0 0"/>
+        </xacro:inertial_cylinder>
+    </link>
+
+    <gazebo reference="piston">
+        <material>Gazebo/White</material>
+        <selfCollide>true</selfCollide>
+        <gravity>0</gravity>
+    </gazebo>
+
+    <!-- Tray -->
+    <joint name="tray_joint" type="fixed">
+        <parent link="piston"/>
+        <child link="tray"/>
+        <origin xyz="0 0 ${tray_offset}"/>
+    </joint>
+
+    <link name="tray">
+        <visual>
+            <geometry>
+                <cylinder radius="${tray_radius}" length="${tray_height}"/>
+            </geometry>
+            <material name="white"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="${tray_radius}" length="${tray_height}"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_cylinder mass="${tray_mass}" length="${tray_height}" radius="${piston_radius}">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_cylinder>
+    </link>
+
+    <gazebo reference="tray">
+        <material>Gazebo/White</material>
     </gazebo>
 
 </robot>
