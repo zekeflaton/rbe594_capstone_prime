@@ -291,7 +291,12 @@ class Robot(object):
         self.end_pose = end_pose
 
     def is_done(self):
-        return self.current_pose == self.charging_station and self.has_shelf
+        """
+        The robot is considered "done" and available for tasking if it has a shelf and is at the end/goal pose
+
+        :return: bool is_done:
+        """
+        return self.current_pose == self.end_pose and self.has_shelf
     
     def set_new_endpoint(self, end_pose):
         self.end_pose = end_pose
