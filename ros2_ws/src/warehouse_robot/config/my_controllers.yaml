@@ -9,18 +9,8 @@ controller_manager:
     joint_broad:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    # joint_piston:
-      # type: position_controllers/JointGroupPositionController
-
     joint_piston:
       type: forward_command_controller/ForwardCommandController
-
-  # joint1_position_controller:
-  #   type: effort_controllers/JointPositionController
-  #   joint: joint_piston
-  #   pid: {p: 1000, i: 0, d: 0}
-    joint piston:
-      type: effort_controllers/JointGroupEffortController
 
 
 diff_cont:
@@ -82,12 +72,6 @@ diff_cont:
 #   ros__parameters:
 
 
-# joint_piston:
-#   ros__parameters:
-
-#     joints:
-#       - piston_joint
-#     interface_name: position
 
 joint_piston:
   ros__parameters:
