@@ -1,5 +1,7 @@
 from python_controllers.src.robot import Robot
 from python_controllers.src.helpers import get_point_from_pose
+from python_controllers.src.tag_locations import tags
+import rclpy
 
 
 class Orchestrator(object):
@@ -13,6 +15,7 @@ class Orchestrator(object):
         :param str | None metrics_file_path: Optional file path to save metrics
         """
         self.shelves = shelves
+        self.tags = tags
         self.size = size
         self.robots: dict[str, Robot] = {}
         self.locked = set()
@@ -26,6 +29,8 @@ class Orchestrator(object):
         self.waiting_robots = set()
         self.motion_planner = motion_planner
         self.metrics_file_path = metrics_file_path
+
+        rclpy.init()
 
 
     def add_robot(self, robot_name, initial_pose, end_pose):

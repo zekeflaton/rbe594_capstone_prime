@@ -3,7 +3,6 @@ import os
 import pickle
 import time
 
-import rclpy
 from nav2_simple_commander.robot_navigator import BasicNavigator
 from python_controllers.src.helpers import (
     write_line_to_file,
@@ -14,6 +13,7 @@ from python_controllers.src.helpers import (
 from python_controllers.src.motion_planners import (
     AStarPlanner
 )
+from python_controllers.src.tag_locations import tags
 
 
 class BatteryCharge(object):
@@ -99,11 +99,8 @@ class Robot(object):
         self.charge_locations = charge_locations
         self.has_shelf = False
         self.metrics_file_path = metrics_file_path
-        rclpy.init()
         self._nav = BasicNavigator()
-        with open(tags_filepath, 'rb') as fp:
-            self.tags = pickle.load(fp)
-            print('tags dictionary saved loaded from file')
+        self.tags = tags
 
     def plan_path(self):
         """
