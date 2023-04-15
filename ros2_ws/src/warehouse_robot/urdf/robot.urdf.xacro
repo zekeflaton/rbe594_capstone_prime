@@ -11,30 +11,30 @@
 
   <xacro:include filename="$(find warehouse_robot)/urdf/robot_parts/traction_wheel.xacro" />
 
-  <xacro:include filename="$(find warehouse_robot)/urdf/robot_parts/tray.xacro" />
+  <!-- <xacro:include filename="$(find warehouse_robot)/urdf/robot_parts/tray.xacro" /> -->
 
-  <xacro:include filename="$(find warehouse_robot)/urdf/robot_parts/piston.xacro" />
+  <!-- <xacro:include filename="$(find warehouse_robot)/urdf/robot_parts/piston.xacro" /> -->
 
   <xacro:include filename="$(find warehouse_robot)/urdf/robot_parts/omni_wheel.xacro" />
 
   <!--=========================== SENSORS ===========================-->
 
-  <xacro:arg name="sensor_imu" default="true" />
+  <!-- <xacro:arg name="sensor_imu" default="true" /> -->
 
   <xacro:arg name="sensor_rplidar" default="true" />
 
-  <xacro:arg name="sensor_camera" default="true" />
+  <!-- <xacro:arg name="sensor_camera" default="true" /> -->
 
-  <xacro:if value="$(arg sensor_imu)">
+  <!-- <xacro:if value="$(arg sensor_imu)">
     <xacro:include filename="$(find warehouse_robot)/urdf/sensors/imu.xacro" />
-  </xacro:if>
+  </xacro:if> -->
 
   <xacro:if value="$(arg sensor_rplidar)">
     <xacro:include filename="$(find warehouse_robot)/urdf/sensors/rplidar.xacro" />
   </xacro:if>
 
-  <xacro:if value="$(arg sensor_camera)">
+  <!-- <xacro:if value="$(arg sensor_camera)">
     <xacro:include filename="$(find warehouse_robot)/urdf/sensors/camera.xacro" />
-  </xacro:if>
+  </xacro:if> -->
 
 </robot>
