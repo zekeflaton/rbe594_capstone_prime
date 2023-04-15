@@ -69,7 +69,7 @@ def generate_launch_description():
 
 
     # Code for delaying a node (I haven't tested how effective it is)
-    # 
+    #
     # First add the below lines to imports
     # from launch.actions import RegisterEventHandler
     # from launch.event_handlers import OnProcessExit
@@ -84,6 +84,17 @@ def generate_launch_description():
     #
     # Replace the diff_drive_spawner in the final return with delayed_diff_drive_spawner
 
+    # joint_state_publisher_gui_node = Node(
+    #     package='joint_state_publisher_gui',
+    #     executable='joint_state_publisher_gui',
+    #     name='joint_state_publisher_gui'
+    # )
+
+    joint_piston_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["joint_piston", "--controller-manager-timeout", "30"],
+    )
 
 
     # Launch them all!
@@ -94,5 +105,6 @@ def generate_launch_description():
         gazebo,
         spawn_entity,
         diff_drive_spawner,
-        joint_broad_spawner
+        joint_broad_spawner,
+        joint_piston_spawner,
     ])
