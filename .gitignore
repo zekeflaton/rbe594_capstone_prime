@@ -2,7 +2,6 @@
 .idea*
 *.pyc
 *.csv
-*.png
 **/install/
 **/log/
 **logs/
