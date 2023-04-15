@@ -16,7 +16,7 @@ package_name = 'python_controllers'
 setup(
     name=package_name,
     version='0.0.0',
-    packages=[package_name, package_name+'/scripts'],
+    packages=[package_name, package_name+'/scripts', package_name+'/src'],
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
