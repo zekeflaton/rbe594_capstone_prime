@@ -52,6 +52,6 @@ To control the robot and move it around the environment in the environment, run 
 To move the piston up and down, run this command with `1.0` for up and `0.0` for down. The newline between 1 and 0 is required
 
 ```
-ros2 topic pub -1 /joint_piston/commands std_msgs/msg/Float64MultiArray "data:
+ros2 topic pub -1 /piston_cont/commands std_msgs/msg/Float64MultiArray "data:
 > - 1.0"
 ```

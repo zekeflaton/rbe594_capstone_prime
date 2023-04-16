@@ -4,7 +4,7 @@
 
     <xacro:macro name="omni_wheel" params="prefix pos_X pos_Y pos_Z pos_r pos_p pos_y">
         <joint name="joint_${prefix}_wheel" type="fixed">
-            <parent link="base_link" />
+            <parent link="carcaca" />
             <child link="${prefix}_wheel" />
             <origin rpy="${pos_r} ${pos_p} ${pos_y}" xyz="${pos_X} ${pos_Y} ${pos_Z}" />
         </joint>
@@ -39,9 +39,9 @@
         </link>
     </xacro:macro>
 
-    <xacro:omni_wheel prefix="left_front" pos_X="-0.214" pos_Y="-0.176" pos_Z="0.0508" pos_r="0" pos_p="1.57" pos_y="0" />
-    <xacro:omni_wheel prefix="left_rear" pos_X="-0.214" pos_Y="0.176" pos_Z="0.0508" pos_r="0" pos_p="1.57" pos_y="0" />
-    <xacro:omni_wheel prefix="right_front" pos_X="0.193" pos_Y="-0.176" pos_Z="0.0508" pos_r="0" pos_p="1.57" pos_y="0" />
-    <xacro:omni_wheel prefix="right_rear" pos_X="0.193" pos_Y="0.176" pos_Z="0.0508" pos_r="0" pos_p="1.57" pos_y="0" />
+    <xacro:omni_wheel prefix="left_front" pos_Y="0.193" pos_X="-0.176" pos_Z="0.0508" pos_r="-1.57" pos_p="0" pos_y="0" />
+    <xacro:omni_wheel prefix="left_rear" pos_Y="0.193" pos_X="0.176" pos_Z="0.0508" pos_r="-1.57" pos_p="0" pos_y="0" />
+    <xacro:omni_wheel prefix="right_front" pos_Y="-0.214" pos_X="-0.176" pos_Z="0.0508" pos_r="1.57" pos_p="0" pos_y="0" />
+    <xacro:omni_wheel prefix="right_rear" pos_Y="-0.214" pos_X="0.176" pos_Z="0.0508" pos_r="1.57" pos_p="0" pos_y="0" />
 
 </robot>

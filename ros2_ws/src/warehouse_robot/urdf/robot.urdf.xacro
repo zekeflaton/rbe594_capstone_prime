@@ -19,28 +19,8 @@
 
   <!--=========================== SENSORS ===========================-->
 
-  <xacro:arg name="sensor_imu" default="true" />
-
-  <xacro:arg name="sensor_lidar" default="true" />
-
-  <xacro:arg name="sensor_rplidar" default="true" />
-
-  <xacro:arg name="sensor_camera" default="true" />
-
-  <xacro:if value="$(arg sensor_imu)">
-    <xacro:include filename="$(find warehouse_robot)/urdf/sensors/imu.xacro" />
-  </xacro:if>
-
-  <xacro:if value="$(arg sensor_lidar)">
-    <xacro:include filename="$(find warehouse_robot)/urdf/sensors/lidar.xacro" />
-  </xacro:if>
-
-  <xacro:if value="$(arg sensor_rplidar)">
     <xacro:include filename="$(find warehouse_robot)/urdf/sensors/rplidar.xacro" />
-  </xacro:if>
 
-  <xacro:if value="$(arg sensor_camera)">
     <xacro:include filename="$(find warehouse_robot)/urdf/sensors/camera.xacro" />
-  </xacro:if>
 
 </robot>
