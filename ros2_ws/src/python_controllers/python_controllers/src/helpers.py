@@ -1,7 +1,8 @@
 import math
-
+import pickle
 import numpy as np
 from nav2_simple_commander.robot_navigator import PoseStamped
+
 
 # create a global list of possible
 # RGB values
@@ -58,16 +59,30 @@ def write_line_to_file(filepath, array, open_mode="a"):
         f.write("\n")
 
 
-def load_tags_dict(tags_filepath):
+def load_tags_dict(tags_filepath="tags_file.pkl"):
     """
     Load the pickled tags file into a dictionary object
+
     :param str tags_filepath: filepath for the pickled tags
     :return: dict tags: dictionary of tags.  key is tag name, value is tuple of (x,y,z, x_rot, y_rot, z_rot)
     """
-    tags_filepath = "tags_file.pkl"
     with open(tags_filepath, 'rb') as fp:
         tags = pickle.load(fp)
-        print('tags dictionary saved loaded from file')
+        print('tags dictionary successfully loaded from file')
+    return tags
+
+
+def load_shelves_dict(shelves_filepath="../src/shelves_file.pkl"):
+    """
+    Load the pickled shelves file into a dictionary object
+
+    :param str shelves_filepath: filepath for the pickled shelves dict
+    :return: dict shelves: {shelf_name: (x, y, z, roll, pitch, yaw}
+    """
+    with open(shelves_filepath, 'rb') as fp:
+        shelves = pickle.load(fp)
+        print('shelves dictionary successfully loaded from file')
+    return shelves
 
 
 def quaternion_from_euler(roll, pitch, yaw):
@@ -119,6 +134,7 @@ def create_pose_stamped(nav, x, y, z, roll, pitch, yaw):
     :param float roll:
     :param float pitch:
     :param float yaw:
+
     :return: nav2_simple_commander.robot_navigator.PoseStamped pose
     """
     pose_stamped = PoseStamped()
@@ -133,3 +149,38 @@ def create_pose_stamped(nav, x, y, z, roll, pitch, yaw):
     pose_stamped.pose.orientation.z = quaternion[2]
     pose_stamped.pose.orientation.w = quaternion[3]
     return pose_stamped
+
+
+def pose_stamped_of_tag(nav, tags, tag_name):
+    """
+    Create a ROS PoseStamped message from a tag name
+
+    :param nav2_simple_commander.robot_navigator.BasicNavigator nav: instance of BasicNavigator
+    :param dict tags: Keys are tag names, values are tuples for the pose (x, y, z, roll, pitch, yaw)
+    :param str tag_name: the name of the tag we want to get the pose for
+
+    :return: nav2_simple_commander.robot_navigator.PoseStamped pose: ROS PoseStamped message
+    """
+    tag_data = pose_of_tag(tags, tag_name)
+    return create_pose_stamped(
+        nav=nav,
+        x=tag_data[0],
+        y=tag_data[1],
+        z=tag_data[2],
+        roll=tag_data[3],
+        pitch=tag_data[4],
+        yaw=tag_data[5],
+    )
+
+
+def pose_of_tag(tags, tag_name):
+    """
+    Create a ROS PoseStamped message from a tag name
+
+    :param dict tags: Keys are tag names, values are tuples for the pose (x, y, z, roll, pitch, yaw)
+    :param str tag_name: the name of the tag we want to get the pose for
+
+    :return: tuple(float) tag_data: (x, y, z, roll, pitch, yaw) of the named tag
+    """
+    tag_data = tags[tag_name]
+    return tag_data

@@ -298,16 +298,6 @@ def main():
         pickle.dump(tags, fp)
         print('dictionary saved successfully to file')
 
-    # print("start embed")
-    # embed()
-    # print("end embed")
-
 
 if __name__ == "__main__":
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument("--num_robots", type=int, default=5)
-    parser.add_argument("--requests_to_make", type=int, default=50)
-
-    args = parser.parse_args()
-
     main()

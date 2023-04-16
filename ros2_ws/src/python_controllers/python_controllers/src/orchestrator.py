@@ -1,18 +1,21 @@
 from python_controllers.src.robot import Robot
 from python_controllers.src.helpers import get_point_from_pose
+from python_controllers.src.tag_locations import tags
+import rclpy
 
 
 class Orchestrator(object):
     def __init__(self, shelves, size, motion_planner=None, metrics_file_path=None):
         """
-        Initialze the orchestrator
+        Initialize the orchestrator
 
-        :param shelves: array indicating locations of obstacles/shelves
-        :param size: size of the map (x, y)
-        :param BaseMotionPlanner/None motion_planner: Optional override for a motion planner class
-        :param str/None metrics_file_path: Optional file path to save metrics
+        :param dict shelves: dictionary of {shelf name:shelf location}
+        :param tuple(float) size: size of the map (x, y)
+        :param BaseMotionPlanner | None motion_planner: Optional override for a motion planner class
+        :param str | None metrics_file_path: Optional file path to save metrics
         """
         self.shelves = shelves
+        self.tags = tags
         self.size = size
         self.robots: dict[str, Robot] = {}
         self.locked = set()
@@ -27,6 +30,8 @@ class Orchestrator(object):
         self.motion_planner = motion_planner
         self.metrics_file_path = metrics_file_path
 
+        rclpy.init()
+
 
     def add_robot(self, robot_name, initial_pose, end_pose):
         """
@@ -38,7 +43,6 @@ class Orchestrator(object):
         """
         self.robots[robot_name] = Robot(
             robot_name=robot_name,
-            obstacles=self.shelves,
             charge_locations=self.charge_locations,
             orchestrator=self,
             max_x=self.size[0],
