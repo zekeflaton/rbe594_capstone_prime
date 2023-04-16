@@ -193,7 +193,7 @@
     </gazebo>
 
     <!-- Piston -->
-    <joint name="piston_joint" type="prismatic">
+    <joint name="joint_piston" type="prismatic">
         <parent link="chassis"/>
         <child link="piston"/>
         <origin xyz="${chassis_length/2} 0 ${piston_offset}"/>
