@@ -46,5 +46,5 @@
     </xacro:macro>
 
     <xacro:traction_wheel prefix="left_wheel" pos_X="0" pos_Y="0.193" pos_Z="0.0507" pos_r="-1.57" pos_p="0" pos_y="0" axis="1"/>
-    <xacro:traction_wheel prefix="right_wheel" pos_X="0" pos_Y="-0.214" pos_Z="0.0507" pos_r="1.57" pos_p="0" pos_y="0" axis="-1"/>
+    <xacro:traction_wheel prefix="right_wheel" pos_X="0" pos_Y="-0.193" pos_Z="0.0507" pos_r="1.57" pos_p="0" pos_y="0" axis="-1"/>
 </robot>
