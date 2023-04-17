@@ -4,13 +4,13 @@
 
     <xacro:macro name="omni_wheel" params="prefix pos_X pos_Y pos_Z pos_r pos_p pos_y">
         <joint name="joint_${prefix}_wheel" type="fixed">
-            <parent link="carcaca" />
+            <parent link="base_link" />
             <child link="${prefix}_wheel" />
             <origin rpy="${pos_r} ${pos_p} ${pos_y}" xyz="${pos_X} ${pos_Y} ${pos_Z}" />
         </joint>
 
         <gazebo reference="${prefix}_wheel">
-            <selfCollide>false</selfCollide>
+            <selfCollide>true</selfCollide>
             <mu1 value="0.09" />
             <mu2 value="0.09" />
             <kp value="10000000.0" />
