@@ -4,8 +4,9 @@ from ament_index_python.packages import get_package_share_directory
 
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration, Command
 
 from launch_ros.actions import Node
 
@@ -18,11 +19,12 @@ def generate_launch_description():
     # !!! MAKE SURE YOU SET THE PACKAGE NAME CORRECTLY !!!
 
     package_name='warehouse_robot' #<--- CHANGE ME
+    robot_name = LaunchConfiguration('robot_name')
 
     rsp = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([os.path.join(
                     get_package_share_directory(package_name),'launch','rsp.launch.py'
-                )]), launch_arguments={'use_sim_time': 'true', 'use_ros2_control': 'true'}.items()
+                )]), launch_arguments={'use_sim_time': 'true', 'use_ros2_control': 'true', 'robot_name': robot_name}.items()
     )
 
     joystick = IncludeLaunchDescription(
@@ -36,7 +38,8 @@ def generate_launch_description():
             package="twist_mux",
             executable="twist_mux",
             parameters=[twist_mux_params, {'use_sim_time': True}],
-            remappings=[('/cmd_vel_out','/diff_cont/cmd_vel_unstamped')]
+            remappings=[('/cmd_vel_out','/diff_cont/cmd_vel_unstamped')],
+            namespace=robot_name
         )
 
     gazebo_params_file = os.path.join(get_package_share_directory(package_name),'config','gazebo_params.yaml')
@@ -51,20 +54,24 @@ def generate_launch_description():
     # Run the spawner node from the gazebo_ros package. The entity name doesn't really matter if you only have a single robot.
     spawn_entity = Node(package='gazebo_ros', executable='spawn_entity.py',
                         arguments=['-topic', 'robot_description',
-                                   '-entity', 'my_bot'],
+                                   '-entity', 'my_bot',
+                                #    '-robot_namespace', robot_name
+                                   ],
                         output='screen')
 
 
     diff_drive_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["diff_cont", "--controller-manager-timeout", "30"],
+        arguments=["diff_cont", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
+        # namespace=robot_name
     )
 
     joint_broad_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_broad", "--controller-manager-timeout", "30"],
+        arguments=["joint_broad", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
+        # namespace=robot_name
     )
 
 
@@ -93,9 +100,14 @@ def generate_launch_description():
     joint_piston_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["piston_cont", "--controller-manager-timeout", "30"],
+        arguments=["piston_cont", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
+        # namespace=robot_name
     )
 
+    robot_namespace = DeclareLaunchArgument(
+            'robot_name',
+            default_value='robot',
+            description='Namespace of robot to spawn')
 
     # Launch them all!
     return LaunchDescription([
@@ -107,4 +119,5 @@ def generate_launch_description():
         diff_drive_spawner,
         joint_broad_spawner,
         joint_piston_spawner,
+        robot_namespace
     ])

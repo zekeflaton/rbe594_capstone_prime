@@ -8,6 +8,7 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
+    robot_name = LaunchConfiguration('robot_name')
 
     joy_params = os.path.join(get_package_share_directory('warehouse_robot'),'config','joystick.yaml')
 
@@ -15,6 +16,7 @@ def generate_launch_description():
             package='joy',
             executable='joy_node',
             parameters=[joy_params, {'use_sim_time': use_sim_time}],
+            namespace=robot_name
          )
 
     teleop_node = Node(
@@ -22,7 +24,8 @@ def generate_launch_description():
             executable='teleop_node',
             name='teleop_node',
             parameters=[joy_params, {'use_sim_time': use_sim_time}],
-            remappings=[('/cmd_vel','/cmd_vel_joy')]
+            remappings=[('/cmd_vel','/cmd_vel_joy')],
+            namespace=robot_name
          )
 
     # twist_stamper = Node(
@@ -33,6 +36,10 @@ def generate_launch_description():
     #                     ('/cmd_vel_out','/diff_cont/cmd_vel')]
     #      )
 
+    robot_namespace = DeclareLaunchArgument(
+            'robot_name',
+            default_value='robot',
+            description='Namespace of robot to spawn')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -41,5 +48,6 @@ def generate_launch_description():
             description='Use sim time if true'),
         joy_node,
         teleop_node,
-        # twist_stamper       
+        robot_namespace
+        # twist_stamper
     ])

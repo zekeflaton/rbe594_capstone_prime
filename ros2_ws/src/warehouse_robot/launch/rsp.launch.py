@@ -15,6 +15,7 @@ def generate_launch_description():
     # Check if we're told to use sim time
     use_sim_time = LaunchConfiguration('use_sim_time')
     use_ros2_control = LaunchConfiguration('use_ros2_control')
+    robot_name = LaunchConfiguration('robot_name')
 
     # Process the URDF file
     pkg_path = os.path.join(get_package_share_directory('warehouse_robot'))
@@ -28,9 +29,13 @@ def generate_launch_description():
         package='robot_state_publisher',
         executable='robot_state_publisher',
         output='screen',
-        parameters=[params]
+        parameters=[params],
+        # namespace=robot_name
     )
-
+    robot_namespace = DeclareLaunchArgument(
+            'robot_name',
+            default_value='robot',
+            description='Namespace of robot to spawn')
 
     # Launch!
     return LaunchDescription([
@@ -42,6 +47,6 @@ def generate_launch_description():
             'use_ros2_control',
             default_value='true',
             description='Use ros2_control if true'),
-
+        robot_namespace,
         node_robot_state_publisher
     ])
