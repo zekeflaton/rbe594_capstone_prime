@@ -62,9 +62,9 @@ def generate_launch_description():
     spawn_entity = Node(package='gazebo_ros', executable='spawn_entity.py',
                         arguments=['-topic', 'robot_description',
                                    '-entity', 'my_bot',
-                                #    '-robot_namespace', robot_name
+                                   '-robot_namespace', robot_name
                                    ],
-                        # namespace=robot_name,
+                        namespace=robot_name,
                         remappings=remappings,
                         output='screen')
 
@@ -74,7 +74,7 @@ def generate_launch_description():
         executable="ros2_control_node",
         parameters=[{'robot_description': robot_description},
                     controller_params_file],
-        # namespace=robot_name
+        namespace=robot_name
     )
 
     delayed_controller_manager = TimerAction(period=3.0, actions=[controller_manager])
@@ -83,8 +83,8 @@ def generate_launch_description():
     diff_drive_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["diff_cont", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
-        # namespace=robot_name
+        arguments=["diff_cont", "--controller-manager-timeout", "30"],
+        namespace=robot_name
     )
 
     delayed_diff_drive_spawner = RegisterEventHandler(
@@ -98,8 +98,8 @@ def generate_launch_description():
     joint_broad_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_broad", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
-        # namespace=robot_name
+        arguments=["joint_broad", "--controller-manager-timeout", "30"],
+        namespace=robot_name
     )
 
     delayed_joint_broad_spawner = RegisterEventHandler(
@@ -113,8 +113,8 @@ def generate_launch_description():
     joint_piston_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["piston_cont", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
-        # namespace=robot_name
+        arguments=["piston_cont", "--controller-manager-timeout", "30"],
+        namespace=robot_name
     )
 
     delayed_joint_piston_spawner = RegisterEventHandler(
@@ -153,6 +153,7 @@ def generate_launch_description():
         joystick,
         twist_mux,
         # delayed_controller_manager,
+        controller_manager,
         # delayed_diff_drive_spawner,
         diff_drive_spawner,
         # delayed_joint_broad_spawner,
