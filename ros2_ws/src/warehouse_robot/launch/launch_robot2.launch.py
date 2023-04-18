@@ -83,7 +83,7 @@ def generate_launch_description():
     diff_drive_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["diff_cont", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
+        arguments=["robot_2/diff_cont", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
         # namespace=robot_name
     )
 
@@ -93,12 +93,12 @@ def generate_launch_description():
             on_start=[diff_drive_spawner],
         )
     )
-    
+
 # Controller update?
     joint_broad_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_broad", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
+        arguments=["robot_2/joint_broad", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
         # namespace=robot_name
     )
 
@@ -113,7 +113,7 @@ def generate_launch_description():
     joint_piston_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["piston_cont", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
+        arguments=["robot_2/piston_cont", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
         # namespace=robot_name
     )
 

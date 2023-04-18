@@ -23,7 +23,7 @@ def generate_launch_description():
 # Does warehouse_robot change?
     package_name='warehouse_robot' #<--- CHANGE ME
 # Update Robot Name
-    robot_name = LaunchConfiguration('robot_name1')
+    robot_name = LaunchConfiguration('robot_name')
     remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
 
 
@@ -31,7 +31,7 @@ def generate_launch_description():
     rsp = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([os.path.join(
                     get_package_share_directory(package_name),'launch','rsp.launch.py'
-                )]), launch_arguments={'use_sim_time': 'true', 'use_ros2_control': 'true', 'robot_name1': robot_name}.items()
+                )]), launch_arguments={'use_sim_time': 'true', 'use_ros2_control': 'true', 'robot_name': robot_name}.items()
     )
 
     joystick = IncludeLaunchDescription(
@@ -53,7 +53,7 @@ def generate_launch_description():
 
 
 
-    robot_description = Command(['ros2 param get --hide-type /robot_state_publisher robot_description'])
+    robot_description = Command(['ros2 param get --hide-type /robot_1/robot_state_publisher robot_description'])
 
 # Need upate controller?
     controller_params_file = os.path.join(get_package_share_directory(package_name),'config','my_controllers.yaml')
@@ -61,7 +61,7 @@ def generate_launch_description():
     # Run the spawner node from the gazebo_ros package. The entity name doesn't really matter if you only have a single robot.
     spawn_entity = Node(package='gazebo_ros', executable='spawn_entity.py',
                         arguments=['-topic', 'robot_description',
-                                   '-entity', 'my_bot',
+                                   '-entity', 'my_robot_1',
                                 #    '-robot_namespace', robot_name
                                    ],
                         # namespace=robot_name,
@@ -83,7 +83,7 @@ def generate_launch_description():
     diff_drive_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["diff_cont", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
+        arguments=["robot_1_diff_cont", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
         # namespace=robot_name
     )
 
@@ -93,12 +93,12 @@ def generate_launch_description():
             on_start=[diff_drive_spawner],
         )
     )
-    
+
 # Controller update?
     joint_broad_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_broad", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
+        arguments=["robot_1_joint_broad", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
         # namespace=robot_name
     )
 
@@ -113,7 +113,7 @@ def generate_launch_description():
     joint_piston_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["piston_cont", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
+        arguments=["robot_1_piston_cont", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
         # namespace=robot_name
     )
 
@@ -125,8 +125,8 @@ def generate_launch_description():
     )
 
     robot_namespace = DeclareLaunchArgument(
-            'robot_name1',
-            default_value='robot',
+            'robot_name',
+            default_value='robot_1',
             description='Namespace of robot to spawn')
 
     # Code for delaying a node (I haven't tested how effective it is)
@@ -153,6 +153,7 @@ def generate_launch_description():
         joystick,
         twist_mux,
         # delayed_controller_manager,
+        controller_manager,
         # delayed_diff_drive_spawner,
         diff_drive_spawner,
         # delayed_joint_broad_spawner,
