@@ -8,6 +8,7 @@ from python_controllers.src.orchestrator import (
 )
 from python_controllers.src.helpers import (
     pose_of_tag,
+    Pose
 )
 from python_controllers.src.shelf_locations import shelves
 from python_controllers.src.tag_locations import tags
@@ -20,39 +21,39 @@ def main(num_robots, requests_to_make, DEBUG=False):
     :param int num_robots: number of robots to use
     :param int requests_to_make: number of job requests to make for the orchestrator
     """
+
+    charge_locations = [
+        pose_of_tag(tags, "tag151"),
+        pose_of_tag(tags, "tag181"),
+        pose_of_tag(tags, "tag211"),
+        pose_of_tag(tags, "tag241"),
+        pose_of_tag(tags, "tag271"),
+    ]
+
     orchestrator = Orchestrator(
         shelves=shelves,
+        charge_locations=charge_locations,
         size=(9, 7),
     )
 
-    starts = []
-    # TODO: Where should all of these robots started?  Can hardcode this if we have a good spot for it.
-    for i in range(num_robots):
-        robot_start_pose = pose_of_tag(tags, "tag{}".format(i+1))
-        # Grab x (1st), y (2nd) and yaw/theta (3rd)
-        starts.append(tuple([robot_start_pose[i] for i in (0, 1, 5)]))
-
-
-    goals = []
-    # TODO: How to create these goals?  Need a way to know which tags have shelves and set the tags as goals.
-    for i in range(num_robots):
-        goal_tag = pose_of_tag(tags, "tag{}".format(i+50))
-        # Grab x (1st), y (2nd) and yaw/theta (3rd)
-        goals.append(tuple([goal_tag[i] for i in (0, 1, 5)]))
+    if num_robots > len(charge_locations):
+        exit("Cannot start with more robots () than charge locations ()".format(num_robots, len(charge_locations)))
+    starts = charge_locations[:num_robots]  # provide only as many starts as there are charge locations
 
 
     # init each robot
     for count, start in enumerate(starts):
-        goal = goals.pop(0)
-        orchestrator.add_robot(count, start, goal)
+        orchestrator.add_robot(count, start)
 
     # create a queue of requests to be handled when a robot
     # is available
+    goals = []
     while len(goals) > 0:
         orchestrator.make_request(goals.pop(0))
 
 
     if DEBUG:
+        orchestrator.robots[0].update_end_pose(Pose(0,0,0,0,0,0))
         embed(
             header="1:\n"
                    "orchestrator.make_request(goal_pose)\n"

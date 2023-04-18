@@ -2,6 +2,135 @@ import math
 import pickle
 import numpy as np
 from nav2_simple_commander.robot_navigator import PoseStamped
+from dataclasses import dataclass, field
+from typing import Any
+
+
+
+class RobotTask(object):
+    def __init__(self, pick_up_location, drop_off_location):
+        """
+
+        :param Posepick_up_location: pose of pick up location
+        :param Pose drop_off_location: Pose of drop off location
+        """
+        self.pick_up_location = pick_up_location
+        self.drop_off_location = drop_off_location
+        self.has_shelf = False
+        self.complete = False
+
+
+class Pose(object):
+
+    def __init__(self, x, y, yaw, z=0, roll=0, pitch=0):
+        """
+        Can use this class as (x, y, theta) where yaw is theta os as a full 3D pose with translation and rotation.
+
+        :param float x:
+        :param float y:
+        :param float z:
+        :param float roll: in degrees
+        :param float pitch: in degrees
+        :param float yaw: in degrees (also used as theta)
+        """
+        self.x = x
+        self.y = y
+        self.z = z
+        self.roll = roll
+        self.pitch = pitch
+        self.yaw = yaw
+
+    def get_2d_pose(self):
+        """
+        Return 2d dimension pose (x, y, theta)
+        :return: Tuple(float) pose:
+        """
+        return self.x, self.y, self.yaw
+
+    def get_3d_pose(self):
+        """
+        Return 3d dimension pose (x, y, z, roll, pitch, yaw)
+        :return: Tuple(float) pose:
+        """
+        return self.x, self.y, self.z, self.roll, self.pitch, self.yaw
+
+    @property
+    def theta(self):
+        return self.yaw
+
+    @classmethod
+    def manhattan_distance(cls, pose1, pose2):
+        return abs(pose1.x - pose2.x) + abs(pose1.y - pose2.y)
+
+    def __str__(self):
+        return "Pose(x: {}\ty: {}\tz: {}\troll: {}\tpitch: {}\tyaw: {})\n".format(
+            self.x, self.y, self.z, self.roll, self.pitch, self.yaw
+        )
+
+    def __repr__(self):
+        return "Pose(x: {}\ty: {}\tz: {}\troll: {}\tpitch: {}\tyaw: {})\n".format(
+            self.x, self.y, self.z, self.roll, self.pitch, self.yaw
+        )
+
+    def __eq__(self, other):
+        if isinstance(other, Pose) and self.x == other.x and self.y == other.y and self.z == other.z and self.roll == other.roll and self.pitch == other.pitch and self.yaw == other.yaw:
+            return True
+        return False
+
+
+class BatteryCharge(object):
+    MIN_CHARGE = 0.0
+    MAX_CHARGE = 100.0
+    DRAIN_PER_MOVE = 3.0
+    DRAIN_PER_CYCLE = 1.0
+    CHARGE_PER_CYCLE = 20
+
+    def __init__(self, initial_charge=None):
+        """
+        Initialize the battery level to the specified level or 0
+        :param float/None initial_charge: amount of initial charge
+        """
+        if initial_charge is None:
+            self.battery_charge = self.MIN_CHARGE
+        else:
+            self.battery_charge = self.bound_value_by_min_and_max(
+                value=initial_charge,
+                value_min=self.MIN_CHARGE,
+                value_max=self.MAX_CHARGE
+            )
+
+    def drain_battery(self, drain_amount=None):
+        """
+        Drain battery charge by specific amount
+
+        :param float drain_amount: amount to drain battery
+        """
+        if not drain_amount:
+            drain_amount = self.DRAIN_PER_MOVE
+        self.battery_charge = self.bound_value_by_min_and_max(self.battery_charge - drain_amount)
+
+    def charge_battery(self, charge_amount=None):
+        """
+        Charge battery charge by specific amount
+
+        :param float charge_amount: amount to charge battery
+        """
+        if not charge_amount:
+            charge_amount = self.CHARGE_PER_CYCLE
+        self.battery_charge = self.bound_value_by_min_and_max(self.battery_charge + charge_amount)
+
+    def bound_value_by_min_and_max(self, value):
+        """
+        Ensure that a value is bounded by a min and max value.
+
+        :param float value: the value to be bounded
+        :return: float value: bounded between min and max
+        """
+        if value < self.MIN_CHARGE:
+            return self.MIN_CHARGE
+        elif value > self.MAX_CHARGE:
+            return self.MAX_CHARGE
+        return value
 
 
 # create a global list of possible
@@ -161,15 +290,15 @@ def pose_stamped_of_tag(nav, tags, tag_name):
 
     :return: nav2_simple_commander.robot_navigator.PoseStamped pose: ROS PoseStamped message
     """
-    tag_data = pose_of_tag(tags, tag_name)
+    tag_pose = pose_of_tag(tags, tag_name)
     return create_pose_stamped(
         nav=nav,
-        x=tag_data[0],
-        y=tag_data[1],
-        z=tag_data[2],
-        roll=tag_data[3],
-        pitch=tag_data[4],
-        yaw=tag_data[5],
+        x=tag_pose.x,
+        y=tag_pose.y,
+        z=tag_pose.z,
+        roll=tag_pose.roll,
+        pitch=tag_pose.pitch,
+        yaw=tag_pose.yaw,
     )
 
 
@@ -180,7 +309,15 @@ def pose_of_tag(tags, tag_name):
     :param dict tags: Keys are tag names, values are tuples for the pose (x, y, z, roll, pitch, yaw)
     :param str tag_name: the name of the tag we want to get the pose for
 
-    :return: tuple(float) tag_data: (x, y, z, roll, pitch, yaw) of the named tag
+    :return: RobotPose tag_data:
     """
     tag_data = tags[tag_name]
-    return tag_data
+    tag_pose = Pose(
+        x=tag_data[0],
+        y=tag_data[1],
+        z=tag_data[2],
+        roll=tag_data[3],
+        pitch=tag_data[4],
+        yaw=tag_data[5],
+    )
+    return tag_pose

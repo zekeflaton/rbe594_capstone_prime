@@ -7,7 +7,9 @@ from nav2_simple_commander.robot_navigator import BasicNavigator
 from python_controllers.src.helpers import (
     write_line_to_file,
     quaternion_from_euler,
-    create_pose_stamped
+    create_pose_stamped,
+    BatteryCharge,
+    Pose
 )
 
 from python_controllers.src.motion_planners import (
@@ -16,68 +18,20 @@ from python_controllers.src.motion_planners import (
 from python_controllers.src.tag_locations import tags
 
 
-class BatteryCharge(object):
-    MIN_CHARGE = 0.0
-    MAX_CHARGE = 100.0
-
-    def __init__(self, initial_charge=None):
-        """
-        Initialize the battery level to the specified level or 0
-        :param float/None initial_charge: amount of initial charge
-        """
-        if initial_charge is None:
-            self.battery_charge = self.MIN_CHARGE
-        else:
-            self.battery_charge = self.bound_value_by_min_and_max(
-                value=initial_charge,
-                value_min=self.MIN_CHARGE,
-                value_max=self.MAX_CHARGE
-            )
-
-    def drain_battery(self, drain_amount):
-        """
-        Drain battery charge by specific amount
-
-        :param float drain_amount: amount to drain battery
-        """
-        self.battery_charge = self.bound_value_by_min_and_max(self.battery_charge - drain_amount)
-
-    def charge_battery(self, charge_amount):
-        """
-        Charge battery charge by specific amount
-
-        :param float charge_amount: amount to charge battery
-        """
-        self.battery_charge = self.bound_value_by_min_and_max(self.battery_charge + charge_amount)
-
-    def bound_value_by_min_and_max(self, value):
-        """
-        Ensure that a value is bounded by a min and max value.
-
-        :param float value: the value to be bounded
-        :return: float value: bounded between min and max
-        """
-        if value < self.MIN_CHARGE:
-            return self.MIN_CHARGE
-        elif value > self.MAX_CHARGE:
-            return self.MAX_CHARGE
-        return value
-
-
 class Robot(object):
 
     def __init__(self, robot_name, charge_locations, orchestrator, max_x, max_y, initial_pose,
-                 end_pose=(None, None, None), motion_planner=None, metrics_file_path=None,
+                 end_pose=None, motion_planner=None, metrics_file_path=None,
                  tags_filepath="../src/tags_file.pkl"):
         """
 
         :param str robot_name: name of the robot
-        :param set(Tuple) charge_locations: set of tuples representing charging grids
-        :param src.orchestrator.Orchestrator orchestrator: Orchestrator passes a copy of itself in
+        :param list(python_controllers.src.helpers.Pose): list of poses representing charging grids
+        :param python_controllers.src.orchestrator.Orchestrator orchestrator: Orchestrator passes a copy of itself in
         :param int max_x: max x of the grid
         :param int max_y: max y of the grid
-        :param Tuple(float) initial_pose: (x, y, theta) of start point
-        :param Tuple(float) end_pose: (x, y, theta) of end point
+        :param python_controllers.src.helpers.Pose initial_pose: pose of start point
+        :param python_controllers.src.helpers.Pose end_pose: pose of end point
         :param BaseMotionPlanner/None motion_planner: Optional override for a motion planner class
         :param str/None metrics_file_path: Optional file path to save metrics
         :param str tags_filepath: File path where april tag information is saved
@@ -89,7 +43,7 @@ class Robot(object):
         self.max_y = max_y
         self.current_pose = initial_pose
         self.charging_station = initial_pose
-        self.shelf_pose = end_pose
+        self.shelf_pose = None
         self.end_pose = end_pose
         self.locked_cells = []
         self.orchestrator = orchestrator  # TODO remove this reference if possible
@@ -110,16 +64,16 @@ class Robot(object):
         """
         start_time = time.time()
         parent_dict = {}
-        if None in self.end_pose:
+        if not self.end_pose:
             print("No end pose for robot {} so a path could not be planned".format(self.robot_name))
             return
-        q, list_of_locations = self.motion_planner.initialize(self.current_pose, self.end_pose)
+        q, list_of_locations = self.motion_planner.initialize(self.current_pose.get_2d_pose(), self.end_pose.get_2d_pose())
         nodes_visited = 0
 
         while not q.empty():
             x, q, current_cost = self.motion_planner.get_next(q)
             nodes_visited += 1
-            if x == self.end_pose:  # If we're at the goal, we're done
+            if x == self.end_pose.get_2d_pose():  # If we're at the goal, we're done
                 self._path = self.backtrace(parent_dict)
                 # pop the first pt because we're already there!
                 self._path.pop(0)
@@ -129,7 +83,7 @@ class Robot(object):
                                        [self.motion_planner.__class__.__name__, str(end_time - start_time)])
                     path_length = len(self._path)
                     # +1 for each movement in x, y, or 90 degree rotation
-                    best_path_length = abs(self.current_pose[0] - self.end_pose[0]) + abs(self.current_pose[1] - self.end_pose[1]) + abs(self.current_pose[2] - self.end_pose[2])/90
+                    best_path_length = abs(self.current_pose.x - self.end_pose.x) + abs(self.current_pose.y - self.end_pose.y) + abs(self.current_pose.theta - self.end_posetheta)/90
                     write_line_to_file(os.path.join(self.metrics_file_path, "path_efficiency_analysis.csv"),
                                        [self.motion_planner.__class__.__name__, str(best_path_length/path_length)])
 
@@ -153,17 +107,17 @@ class Robot(object):
                                [self.motion_planner.__class__.__name__, str(end_time - start_time)])
         return False
 
-    def get_all_actions(self, pose, motion_planner):
+    def get_all_actions(self, pose_tuple, motion_planner):
         """
 
-        :param tuple pose: Tuple of ints giving the (x,y) position as the source for new actions
+        :param tuple pose_tuple: Tuple of ints giving the (x,y) position as the source for new actions
         :param BaseMotionPlanner motion_planner: Motion planner to use for cost calculations
         :return: list(Tuple): list of tuples of (possible_action, cost_of_action)
         """
         all_possible_actions = []
         coordinates = []
 
-        x_base, y_base, theta_base = pose
+        x_base, y_base, theta_base = pose_tuple
         # test which axis the robot is aligned on
         # add forward and backward moves
         movement = 0.5
@@ -188,10 +142,11 @@ class Robot(object):
         coordinates.append((x_base, y_base, ccw_turn))
         coordinates.append((x_base, y_base, cw_turn))
 
-        for x, y, theta in coordinates:
+        for pose_tuple in coordinates:
+            x, y, _ = pose_tuple
             # Ensure that the location has a valid tag and that the orchestrator has not locked the point
             if not self.orchestrator.is_pt_locked((x, y)) and (x, y, 0.011, 0, 0, 0) in self.tags.values():
-                all_possible_actions.append(((x, y, theta), motion_planner.cost((x, y, theta), self.end_pose)))
+                all_possible_actions.append((pose_tuple, motion_planner.cost(pose_tuple, self.end_pose.get_2d_pose())))
         
         return all_possible_actions
 
@@ -200,7 +155,9 @@ class Robot(object):
         Returns the next two path points
         :return: (Tuple(Tuple))
         """
-        if not self._path:
+
+        # If the robot is not at the end pose and we do not have a planned path, then plan one.
+        if self.current_pose != self.end_pose and not self._path:
             self.plan_path()
 
         if len(self._path) > 1:
@@ -276,11 +233,6 @@ class Robot(object):
         :return: bool is_done:
         """
         return self.current_pose == self.end_pose and self.has_shelf
-    
-    def set_new_endpoint(self, end_pose):
-        self.end_pose = end_pose
-        self.shelf_pose = end_pose
-        self.has_shelf = False
 
 
     @property
@@ -291,8 +243,8 @@ class Robot(object):
         return self.current_pose
 
     def backtrace(self, parent):
-        path = [self.end_pose]
-        while path[-1] != self.current_pose:
+        path = [self.end_pose.get_2d_pose()]
+        while path[-1] != self.current_pose.get_2d_pose():
             path.append(parent[path[-1]])
         path.reverse()
         return path
