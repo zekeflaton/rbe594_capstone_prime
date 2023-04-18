@@ -55,6 +55,7 @@ class Robot(object):
         self.metrics_file_path = metrics_file_path
         self._nav = BasicNavigator()
         self.tags = tags
+        self._current_task = None
 
     def plan_path(self):
         """
@@ -168,15 +169,26 @@ class Robot(object):
             return None, None
 
     def move_robot(self):
-        if self.current_pose in self.charge_locations and not self._path:
-            # TODO change this hardcoded value to something based on research
-            self.battery_charge.charge_battery(5)
+        # if the robot is at a charge location task, then spend the cycle charging
+        if self.current_pose in self.charge_locations and not self._current_task:
+            self.battery_charge.charge_battery(BatteryCharge.CHARGE_PER_CYCLE)
         else:
+            # Always drain the battery by this amount
+            self.battery_charge.drain_battery(BatteryCharge.DRAIN_PER_CYCLE)
 
-            waypoints = []
-            # while self._path:
-            next_path_pose = self._path.pop(0)
-            print(next_path_pose)
+            if self._path:
+                # Since we're going to move, get the next waypoint and drain the battery for the upcoming move cycle
+                next_path_pose = self._path.pop(0)
+                self.battery_charge.drain_battery(BatteryCharge.DRAIN_PER_MOVE)
+            else:
+                path_was_planned = False
+                if self.end_pose and self.current_pose != self.end_pose:
+                    path_was_planned = self.plan_path()  # returns True if path planned successfully
+                if not path_was_planned:
+                    # No path exists and we were not able to plan one, are already at the end pose, or don't have an end pose set
+                    print("Robot ({}) did not move this cycle".format(self.robot_name))
+                    return
+
             # Set our demo's initial pose
             # http://docs.ros.org/en/noetic/api/geometry_msgs/html/msg/PoseStamped.html
             next_pose_stamped = create_pose_stamped(
@@ -191,9 +203,7 @@ class Robot(object):
             # http: // wiki.ros.org / tf2 / Tutorials / Quaternions
             # https: // answers.unity.com / questions / 147712 / what - is -affected - by - the - w - in -quaternionxyzw.html
             # https://www.programcreek.com/python/example/70252/geometry_msgs.msg.PoseStamped
-            waypoints.append(next_pose_stamped)
-
-            self._nav.followWaypoints(waypoints)
+            self._nav.followWaypoints([next_pose_stamped])
             while not self._nav.isTaskComplete():
                 feedback = self._nav.getFeedback()
                 print(feedback)
@@ -205,12 +215,21 @@ class Robot(object):
 
             for observer in self.observers:
                 observer.__call__(self.current_pose)
-            # TODO remove this hardcoded drain amount with a value based on load, turning, movement, etc
-            self.battery_charge.drain_battery(1.0)
-        
+
+
         # mark that the robot has reached the shelf
-        if self.current_pose == self.shelf_pose:
+        if self.current_pose == self._current_task.pick_up_location:
+            # TODO Control piston to lift shelf
+            print("Robot {} has picked up the shelf".format(self.robot_name))
             self.has_shelf = True
+            self._current_task.has_shelf = True
+            self.end_pose = self._current_task.drop_off_location  # Update end pose to drop off location
+        elif self.current_pose == self._current_task.drop_off_location:
+            # TODO Control piston to lower shelf
+            print("Robot {} has completed it's task".format(self.robot_name))
+            self._current_task = None
+            # Update end pose to charge station unless new tasking overwrites this
+            self.end_pose = self.charge_locations[int(self.robot_name)]
 
     def subscribe_to_movement(self, func):
         self.observers.append(func)
@@ -228,11 +247,11 @@ class Robot(object):
 
     def is_done(self):
         """
-        The robot is considered "done" and available for tasking if it has a shelf and is at the end/goal pose
+        The robot is considered "done" and available for tasking if it does not have a current task
 
         :return: bool is_done:
         """
-        return self.current_pose == self.end_pose and self.has_shelf
+        return not self._current_task
 
 
     @property
@@ -248,4 +267,14 @@ class Robot(object):
             path.append(parent[path[-1]])
         path.reverse()
         return path
+
+    def assign_new_task(self, task):
+        """
+        Get a new task, set the pick up point as the new end pose, plan the path
+
+        :param RobotTask task: RobotTask instance
+        """
+        self._current_task = task
+        self.end_pose = self._current_task.pick_up_location
+        self.plan_path()
 

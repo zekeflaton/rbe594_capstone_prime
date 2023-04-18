@@ -108,6 +108,8 @@ class BatteryCharge(object):
         """
         if not drain_amount:
             drain_amount = self.DRAIN_PER_MOVE
+        if self.battery_charge - drain_amount < 0:
+            print("Robot ran out of juice....oops!")
         self.battery_charge = self.bound_value_by_min_and_max(self.battery_charge - drain_amount)
 
     def charge_battery(self, charge_amount=None):

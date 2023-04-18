@@ -74,51 +74,40 @@ class Orchestrator(object):
         Execute a move for all of the robots under the orchestrator
         control. If a collision is detected, replan the path.
         """
-        robots_to_move = [(r, self.robots[r]) for r in self.robots if not self.robots[r].is_done()]
-        for id, robot in robots_to_move:
+        for i in range(len(self.robots)):
+            # Check to see if any robots are available for tasking and assign tasks off the request queue
+            robot_for_tasking = self.find_robot_for_task(self.request_queue[0])
+            if robot_for_tasking:
+                robot_for_tasking.assign_new_task(self.request_queue.pop(0))
+            else:
+                # If no robots are available for tasking, break out of this loop
+                break
+
+        # Move each robot while avoiding deadlocks using the strategy of locking the next 2 waypoints
+        for id, robot in self.robots:
+
             # unlock reserved pts
             for pt in robot.locked_cells:
                 if pt in self.locked:
                     self.locked.remove(pt)
             robot.locked_cells.clear()  
 
-            # check if the robot is waiting
-            # for a path. If so, try to plan
-            # if we still can't find a path, skip this iteration
-            if id in self.waiting_robots:
-                success = robot.plan_path()
-                if success:
-                    self.waiting_robots.remove(id)
-                else:
-                    self.on_deadlock(robot.current_pose)
-                    continue
-
-            # identify the next two pts we need to
-            # lock for this robot
+            # identify the next two pts we need to lock for this robot
             first, second = robot.get_next_two_points()
-            # if either is already reserved for another robot
-            # we need to replan the path
+            # if either is already reserved for another robot we need to replan the path
             if self.is_pt_locked(first) or self.is_pt_locked(second):                
                 self.on_deadlock(robot.current_pose)
-                self.waiting_robots.add(id)
-                continue
-            
-            # once an available path has been found,
-            # reserve the first and second pts for this
-            # robot
+                robot.plan_path()
+                first, second = robot.get_next_two_points()
+
+            # Once an available path has been found, reserve the first and second pts for this robot
             self.lock_cells(robot, first, second)
             robot.move_robot()
-            # if we're at the shelf, turn around and go
-            # back to charging/pickup station
-            if robot.current_pose == robot.shelf_pose:
-                robot.end_pose = robot.charging_station
-                self.waiting_robots.add(id)
-            # if we're back at the pickup station, and there's still
-            # requests left, pop the next request
-            elif robot.is_done() and len(self.request_queue) > 0:
-                next = self.request_queue.pop(0)
+
+            if robot.is_done() and self.request_queue:
+                next_request = self.request_queue.pop(0)
                 print(f'Requests left: {len(self.request_queue)}')
-                robot.update_end_pose(next)
+                robot.assign_new_task(next_request)
                 self.waiting_robots.add(id)
 
     def lock_cells(self, robot, first, second=None):
@@ -159,7 +148,8 @@ class Orchestrator(object):
         """
 
         :param RobotTask task: RobotTask instance
-        :return: int | None robot: robot name.  Robots are 0-indexed.  If o robots have sufficient charge for the task, return None
+        :return: python_controllers.src.robot.Robot robot: Instance of the robot that's available for
+                        tasking. If o robots have sufficient charge for the task, return None
         """
         robot_to_use = None
         best_robot_distance_to_cover = None
@@ -175,7 +165,7 @@ class Orchestrator(object):
             if robot.battery_charge.battery_charge >= battery_usage_estimate:
                 # If we do not have a robot set or this robot is closer to the pick up point, then select this as the best option
                 if not robot_to_use or distance_to_cover < best_robot_distance_to_cover:
-                    robot_to_use = robot.robot_name
+                    robot_to_use = robot
                     best_robot_distance_to_cover = distance_to_cover
         return robot_to_use
 

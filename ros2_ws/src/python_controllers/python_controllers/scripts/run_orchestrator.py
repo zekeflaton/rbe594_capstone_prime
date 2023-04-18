@@ -43,7 +43,7 @@ def main(num_robots, requests_to_make, DEBUG=False):
 
     # init each robot
     for count, start in enumerate(starts):
-        orchestrator.add_robot(count, start)
+        orchestrator.add_robot(str(count), start)
 
     # create a queue of requests to be handled when a robot
     # is available
@@ -54,7 +54,7 @@ def main(num_robots, requests_to_make, DEBUG=False):
 
     if DEBUG:
         for i, robot in orchestrator.robots:
-            robot.update_end_pose(Pose(i, i, 0, 0, 0, 0))
+            robot.update_end_pose(Pose(int(i), int(i), 0, 0, 0, 0))
         embed(
             header="1:\n"
                    "orchestrator.make_request(goal_pose)\n"
