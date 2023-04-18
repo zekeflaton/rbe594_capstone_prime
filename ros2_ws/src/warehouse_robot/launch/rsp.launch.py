@@ -30,7 +30,7 @@ def generate_launch_description():
         executable='robot_state_publisher',
         output='screen',
         parameters=[params],
-        # namespace=robot_name
+        namespace=robot_name
     )
     robot_namespace = DeclareLaunchArgument(
             'robot_name',
