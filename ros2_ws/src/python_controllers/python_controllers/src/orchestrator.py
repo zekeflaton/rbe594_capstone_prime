@@ -1,15 +1,21 @@
-from python_controllers.src.robot import Robot
-from python_controllers.src.helpers import get_point_from_pose
-from python_controllers.src.tag_locations import tags
 import rclpy
+from python_controllers.src.robot import Robot
+from python_controllers.src.helpers import (
+    get_point_from_pose,
+    BatteryCharge,
+    Pose
+)
+from python_controllers.src.tag_locations import tags
+
 
 
 class Orchestrator(object):
-    def __init__(self, shelves, size, motion_planner=None, metrics_file_path=None):
+    def __init__(self, shelves, charge_locations, size, motion_planner=None, metrics_file_path=None):
         """
         Initialize the orchestrator
 
         :param dict shelves: dictionary of {shelf name:shelf location}
+        :param list(python_controllers.src.helpers.Pose) charge_locations: list of poses (x, y, theta) describing charge locations
         :param tuple(float) size: size of the map (x, y)
         :param BaseMotionPlanner | None motion_planner: Optional override for a motion planner class
         :param str | None metrics_file_path: Optional file path to save metrics
@@ -21,7 +27,7 @@ class Orchestrator(object):
         self.locked = set()
         self.deadlock_observers = []
         self.deadlock_count = 0
-        self.charge_locations = []
+        self.charge_locations = charge_locations
         self.request_queue = []
         # this set holds the ids of robots
         # waiting to plan a path. Deadlocked robots
@@ -29,11 +35,12 @@ class Orchestrator(object):
         self.waiting_robots = set()
         self.motion_planner = motion_planner
         self.metrics_file_path = metrics_file_path
+        self.battery_estimate_buffer = 0.2
 
         rclpy.init()
 
 
-    def add_robot(self, robot_name, initial_pose, end_pose):
+    def add_robot(self, robot_name, initial_pose, end_pose=None):
         """
 
         :param int/str robot_name:
@@ -53,9 +60,6 @@ class Orchestrator(object):
             metrics_file_path=self.metrics_file_path,
         )
         self.waiting_robots.add(robot_name)
-        # self.robots[robot_name].plan_path()
-        # first, second = self.robots[robot_name].get_next_two_points()
-        # self.lock_cells(self.robots[robot_name], first, second)
         return self.robots[robot_name]
 
     def make_request(self, end_pose):
@@ -114,9 +118,8 @@ class Orchestrator(object):
             elif robot.is_done() and len(self.request_queue) > 0:
                 next = self.request_queue.pop(0)
                 print(f'Requests left: {len(self.request_queue)}')
-                robot.set_new_endpoint(next)
+                robot.update_end_pose(next)
                 self.waiting_robots.add(id)
-
 
     def lock_cells(self, robot, first, second=None):
         """
@@ -151,5 +154,29 @@ class Orchestrator(object):
 
     def unsubscribe_to_deadlock(self, func):
         self.deadlock_observers.remove(func)
+
+    def find_robot_for_task(self, task):
+        """
+
+        :param RobotTask task: RobotTask instance
+        :return: int | None robot: robot name.  Robots are 0-indexed.  If o robots have sufficient charge for the task, return None
+        """
+        robot_to_use = None
+        best_robot_distance_to_cover = None
+        for robot in self.robots:
+            # Get the manhattan distance of the robots currnet pose to the first task plus the tasks pick up point plus
+            # the distance of the tasks pick up point to the drop off point.
+            distance_to_cover = Pose.manhattan_distance(robot.current_pose, task.pick_up_location) + Pose.manhattan_distance(task.pick_up_location, task.drop_off_location)
+
+            # Estimate battery usage with a buffer for unexpected obstacles or deadlocks
+            battery_usage_estimate = BatteryCharge.DRAIN_PER_CYCLE * distance_to_cover * (1 + self.battery_estimate_buffer)
+
+            # Only consider the robot if it has enough battery to get to its destination
+            if robot.battery_charge.battery_charge >= battery_usage_estimate:
+                # If we do not have a robot set or this robot is closer to the pick up point, then select this as the best option
+                if not robot_to_use or distance_to_cover < best_robot_distance_to_cover:
+                    robot_to_use = robot.robot_name
+                    best_robot_distance_to_cover = distance_to_cover
+        return robot_to_use
 
 
