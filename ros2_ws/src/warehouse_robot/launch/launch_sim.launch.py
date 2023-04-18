@@ -21,26 +21,26 @@ def generate_launch_description():
     package_name='warehouse_robot' #<--- CHANGE ME
     robot_name = LaunchConfiguration('robot_name')
 
-    rsp = IncludeLaunchDescription(
-                PythonLaunchDescriptionSource([os.path.join(
-                    get_package_share_directory(package_name),'launch','rsp.launch.py'
-                )]), launch_arguments={'use_sim_time': 'true', 'use_ros2_control': 'true', 'robot_name': robot_name}.items()
-    )
+    # rsp = IncludeLaunchDescription(
+    #             PythonLaunchDescriptionSource([os.path.join(
+    #                 get_package_share_directory(package_name),'launch','rsp.launch.py'
+    #             )]), launch_arguments={'use_sim_time': 'true', 'use_ros2_control': 'true', 'robot_name': robot_name}.items()
+    # )
 
-    joystick = IncludeLaunchDescription(
-                PythonLaunchDescriptionSource([os.path.join(
-                    get_package_share_directory(package_name),'launch','joystick.launch.py'
-                )]), launch_arguments={'use_sim_time': 'true'}.items()
-    )
+    # joystick = IncludeLaunchDescription(
+    #             PythonLaunchDescriptionSource([os.path.join(
+    #                 get_package_share_directory(package_name),'launch','joystick.launch.py'
+    #             )]), launch_arguments={'use_sim_time': 'true'}.items()
+    # )
 
-    twist_mux_params = os.path.join(get_package_share_directory(package_name),'config','twist_mux.yaml')
-    twist_mux = Node(
-            package="twist_mux",
-            executable="twist_mux",
-            parameters=[twist_mux_params, {'use_sim_time': True}],
-            remappings=[('/cmd_vel_out','/diff_cont/cmd_vel_unstamped')],
-            namespace=robot_name
-        )
+    # twist_mux_params = os.path.join(get_package_share_directory(package_name),'config','twist_mux.yaml')
+    # twist_mux = Node(
+    #         package="twist_mux",
+    #         executable="twist_mux",
+    #         parameters=[twist_mux_params, {'use_sim_time': True}],
+    #         remappings=[('/cmd_vel_out','/diff_cont/cmd_vel_unstamped')],
+    #         namespace=robot_name
+    #     )
 
     gazebo_params_file = os.path.join(get_package_share_directory(package_name),'config','gazebo_params.yaml')
 
@@ -52,27 +52,27 @@ def generate_launch_description():
              )
 
     # Run the spawner node from the gazebo_ros package. The entity name doesn't really matter if you only have a single robot.
-    spawn_entity = Node(package='gazebo_ros', executable='spawn_entity.py',
-                        arguments=['-topic', 'robot_description',
-                                   '-entity', 'my_bot',
-                                #    '-robot_namespace', robot_name
-                                   ],
-                        output='screen')
+    # spawn_entity = Node(package='gazebo_ros', executable='spawn_entity.py',
+    #                     arguments=['-topic', 'robot_description',
+    #                                '-entity', 'my_bot',
+    #                             #    '-robot_namespace', robot_name
+    #                                ],
+    #                     output='screen')
 
 
-    diff_drive_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["diff_cont", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
-        # namespace=robot_name
-    )
+    # diff_drive_spawner = Node(
+    #     package="controller_manager",
+    #     executable="spawner",
+    #     arguments=["diff_cont", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
+    #     # namespace=robot_name
+    # )
 
-    joint_broad_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["joint_broad", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
-        # namespace=robot_name
-    )
+    # joint_broad_spawner = Node(
+    #     package="controller_manager",
+    #     executable="spawner",
+    #     arguments=["joint_broad", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
+    #     # namespace=robot_name
+    # )
 
 
     # Code for delaying a node (I haven't tested how effective it is)
@@ -97,12 +97,12 @@ def generate_launch_description():
     #     name='joint_state_publisher_gui'
     # )
 
-    joint_piston_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["piston_cont", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
-        # namespace=robot_name
-    )
+    # joint_piston_spawner = Node(
+    #     package="controller_manager",
+    #     executable="spawner",
+    #     arguments=["piston_cont", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
+    #     # namespace=robot_name
+    # )
 
     robot_namespace = DeclareLaunchArgument(
             'robot_name',
@@ -111,13 +111,13 @@ def generate_launch_description():
 
     # Launch them all!
     return LaunchDescription([
-        rsp,
-        joystick,
-        twist_mux,
+        # rsp,
+        # joystick,
+        # twist_mux,
         gazebo,
-        spawn_entity,
-        diff_drive_spawner,
-        joint_broad_spawner,
-        joint_piston_spawner,
+        # spawn_entity,
+        # diff_drive_spawner,
+        # joint_broad_spawner,
+        # joint_piston_spawner,
         robot_namespace
     ])
