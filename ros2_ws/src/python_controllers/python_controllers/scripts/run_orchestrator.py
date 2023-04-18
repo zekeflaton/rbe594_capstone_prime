@@ -53,7 +53,8 @@ def main(num_robots, requests_to_make, DEBUG=False):
 
 
     if DEBUG:
-        orchestrator.robots[0].update_end_pose(Pose(0,0,0,0,0,0))
+        for i, robot in orchestrator.robots:
+            robot.update_end_pose(Pose(i, i, 0, 0, 0, 0))
         embed(
             header="1:\n"
                    "orchestrator.make_request(goal_pose)\n"

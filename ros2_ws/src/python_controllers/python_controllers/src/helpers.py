@@ -33,12 +33,13 @@ class Pose(object):
         :param float pitch: in degrees
         :param float yaw: in degrees (also used as theta)
         """
-        self.x = x
-        self.y = y
-        self.z = z
-        self.roll = roll
-        self.pitch = pitch
-        self.yaw = yaw
+        # Multiple all by "1." to ensure they're floats
+        self.x = x * 1.
+        self.y = y * 1.
+        self.z = z * 1.
+        self.roll = roll * 1.
+        self.pitch = pitch * 1.
+        self.yaw = yaw * 1.
 
     def get_2d_pose(self):
         """
