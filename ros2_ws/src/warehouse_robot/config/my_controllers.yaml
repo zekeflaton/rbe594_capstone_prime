@@ -3,52 +3,52 @@ controller_manager:
     update_rate: 30
     # use_sim_time: true
 
-    robot_1/diff_cont:
+    robot_1_diff_cont:
       type: diff_drive_controller/DiffDriveController
 
-    robot_1/joint_broad:
+    robot_1_joint_broad:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    robot_1/piston_cont:
+    robot_1_piston_cont:
       type: forward_command_controller/ForwardCommandController
 
-    robot_2/diff_cont:
+    robot_2_diff_cont:
       type: diff_drive_controller/DiffDriveController
 
-    robot_2/joint_broad:
+    robot_2_joint_broad:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    robot_2/piston_cont:
+    robot_2_piston_cont:
       type: forward_command_controller/ForwardCommandController
 
-    robot_3/diff_cont:
+    robot_3_diff_cont:
       type: diff_drive_controller/DiffDriveController
 
-    robot_3/joint_broad:
+    robot_3_joint_broad:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    robot_3/piston_cont:
+    robot_3_piston_cont:
       type: forward_command_controller/ForwardCommandController
 
-    robot_4/diff_cont:
+    robot_4_diff_cont:
       type: diff_drive_controller/DiffDriveController
 
-    robot_4/joint_broad:
+    robot_4_joint_broad:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    robot_4/piston_cont:
+    robot_4_piston_cont:
       type: forward_command_controller/ForwardCommandController
 
-    robot_5/diff_cont:
+    robot_5_diff_cont:
       type: diff_drive_controller/DiffDriveController
 
-    robot_5/joint_broad:
+    robot_5_joint_broad:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    robot_5/piston_cont:
+    robot_5_piston_cont:
       type: forward_command_controller/ForwardCommandController
 
-robot_1/diff_cont:
+robot_1_diff_cont:
   ros__parameters:
 
     publish_rate: 50.0
@@ -106,7 +106,7 @@ robot_1/diff_cont:
 # joint_broad:
 #   ros__parameters:
 
-robot_1/piston_cont:
+robot_1_piston_cont:
   ros__parameters:
 
     joints:
@@ -117,7 +117,7 @@ robot_1/piston_cont:
     #   stopped_velocity_tolerance: 0.01 # Defaults to 0.01
     #   goal_time: 0.0 # Defaults to 0.0 (start immediately)
 
-robot_2/diff_cont:
+robot_2_diff_cont:
   ros__parameters:
 
     publish_rate: 50.0
@@ -131,7 +131,7 @@ robot_2/diff_cont:
 
     use_stamped_vel: false
 
-robot_2/piston_cont:
+robot_2_piston_cont:
   ros__parameters:
 
     joints:
@@ -142,7 +142,7 @@ robot_2/piston_cont:
     #   stopped_velocity_tolerance: 0.01 # Defaults to 0.01
     #   goal_time: 0.0 # Defaults to 0.0 (start immediately)
 
-robot_2/diff_cont:
+robot_2_diff_cont:
   ros__parameters:
 
     publish_rate: 50.0
@@ -156,7 +156,7 @@ robot_2/diff_cont:
 
     use_stamped_vel: false
 
-robot_2/piston_cont:
+robot_2_piston_cont:
   ros__parameters:
 
     joints:
@@ -167,7 +167,7 @@ robot_2/piston_cont:
     #   stopped_velocity_tolerance: 0.01 # Defaults to 0.01
     #   goal_time: 0.0 # Defaults to 0.0 (start immediately)
 
-robot_3/diff_cont:
+robot_3_diff_cont:
   ros__parameters:
 
     publish_rate: 50.0
@@ -181,7 +181,7 @@ robot_3/diff_cont:
 
     use_stamped_vel: false
 
-robot_3/piston_cont:
+robot_3_piston_cont:
   ros__parameters:
 
     joints:
@@ -193,7 +193,7 @@ robot_3/piston_cont:
     #   goal_time: 0.0 # Defaults to 0.0 (start immediately)
 
 
-robot_3/diff_cont:
+robot_3_diff_cont:
   ros__parameters:
 
     publish_rate: 50.0
@@ -207,7 +207,7 @@ robot_3/diff_cont:
 
     use_stamped_vel: false
 
-robot_3/piston_cont:
+robot_3_piston_cont:
   ros__parameters:
 
     joints:
@@ -218,7 +218,7 @@ robot_3/piston_cont:
     #   stopped_velocity_tolerance: 0.01 # Defaults to 0.01
     #   goal_time: 0.0 # Defaults to 0.0 (start immediately)
 
-robot_4/diff_cont:
+robot_4_diff_cont:
   ros__parameters:
 
     publish_rate: 50.0
@@ -232,7 +232,7 @@ robot_4/diff_cont:
 
     use_stamped_vel: false
 
-robot_4/piston_cont:
+robot_4_piston_cont:
   ros__parameters:
 
     joints:
@@ -243,7 +243,7 @@ robot_4/piston_cont:
     #   stopped_velocity_tolerance: 0.01 # Defaults to 0.01
     #   goal_time: 0.0 # Defaults to 0.0 (start immediately)
 
-robot_5/diff_cont:
+robot_5_diff_cont:
   ros__parameters:
 
     publish_rate: 50.0
@@ -257,7 +257,7 @@ robot_5/diff_cont:
 
     use_stamped_vel: false
 
-robot_5/piston_cont:
+robot_5_piston_cont:
   ros__parameters:
 
     joints:
