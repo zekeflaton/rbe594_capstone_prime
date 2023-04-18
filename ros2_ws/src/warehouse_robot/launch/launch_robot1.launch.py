@@ -23,7 +23,7 @@ def generate_launch_description():
 # Does warehouse_robot change?
     package_name='warehouse_robot' #<--- CHANGE ME
 # Update Robot Name
-    robot_name = LaunchConfiguration('robot_name')
+    robot_name = LaunchConfiguration('robot_name1')
     remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
 
 
@@ -31,7 +31,7 @@ def generate_launch_description():
     rsp = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([os.path.join(
                     get_package_share_directory(package_name),'launch','rsp.launch.py'
-                )]), launch_arguments={'use_sim_time': 'true', 'use_ros2_control': 'true', 'robot_name': robot_name}.items()
+                )]), launch_arguments={'use_sim_time': 'true', 'use_ros2_control': 'true', 'robot_name1': robot_name}.items()
     )
 
     joystick = IncludeLaunchDescription(
@@ -125,7 +125,7 @@ def generate_launch_description():
     )
 
     robot_namespace = DeclareLaunchArgument(
-            'robot_name',
+            'robot_name1',
             default_value='robot',
             description='Namespace of robot to spawn')
 
