@@ -53,7 +53,7 @@ def generate_launch_description():
 
 
 
-    robot_description = Command(['ros2 param get --hide-type /robot_1/robot_state_publisher robot_description'])
+    robot_description = Command(['ros2 param get --hide-type /robot_1/robot_state_publisher robot_1/robot_description'])
 
 # Need upate controller?
     controller_params_file = os.path.join(get_package_share_directory(package_name),'config','my_controllers.yaml')
@@ -62,9 +62,9 @@ def generate_launch_description():
     spawn_entity = Node(package='gazebo_ros', executable='spawn_entity.py',
                         arguments=['-topic', 'robot_description',
                                    '-entity', 'my_robot_1',
-                                #    '-robot_namespace', robot_name
+                                   '-robot_namespace', robot_name
                                    ],
-                        # namespace=robot_name,
+                        namespace=robot_name,
                         remappings=remappings,
                         output='screen')
 
@@ -83,7 +83,7 @@ def generate_launch_description():
     diff_drive_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["robot_1_diff_cont", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
+        arguments=["robot_1_diff_cont", "--controller-manager-timeout", "30"],
         # namespace=robot_name
     )
 
@@ -98,7 +98,7 @@ def generate_launch_description():
     joint_broad_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["robot_1_joint_broad", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
+        arguments=["robot_1_joint_broad", "--controller-manager-timeout", "30"],
         # namespace=robot_name
     )
 
@@ -113,7 +113,7 @@ def generate_launch_description():
     joint_piston_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["robot_1_piston_cont", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
+        arguments=["robot_1_piston_cont", "--controller-manager-timeout", "30"],
         # namespace=robot_name
     )
 
@@ -153,13 +153,13 @@ def generate_launch_description():
         joystick,
         twist_mux,
         # delayed_controller_manager,
-        controller_manager,
+        # controller_manager,
         # delayed_diff_drive_spawner,
-        diff_drive_spawner,
+        # diff_drive_spawner,
         # delayed_joint_broad_spawner,
-        joint_broad_spawner,
+        # joint_broad_spawner,
         # delayed_joint_piston_spawner,
-        joint_piston_spawner,
+        # joint_piston_spawner,
         robot_namespace,
         spawn_entity
     ])

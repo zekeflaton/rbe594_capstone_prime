@@ -133,5 +133,5 @@ def generate_launch_description():
         # diff_drive_spawner,
         # joint_broad_spawner,
         # joint_piston_spawner,
-        robot_namespace
+        # robot_namespace
     ])
