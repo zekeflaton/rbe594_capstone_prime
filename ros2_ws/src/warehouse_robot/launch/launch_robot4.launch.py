@@ -23,7 +23,7 @@ def generate_launch_description():
 # Does warehouse_robot change?
     package_name='warehouse_robot' #<--- CHANGE ME
 # Update Robot Name
-    robot_name = LaunchConfiguration('robot_name4')
+    robot_name = LaunchConfiguration('robot_name')
     remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
 
 
@@ -31,7 +31,7 @@ def generate_launch_description():
     rsp = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([os.path.join(
                     get_package_share_directory(package_name),'launch','rsp.launch.py'
-                )]), launch_arguments={'use_sim_time': 'true', 'use_ros2_control': 'true', 'robot_name4': robot_name}.items()
+                )]), launch_arguments={'use_sim_time': 'true', 'use_ros2_control': 'true', 'robot_name': robot_name}.items()
     )
 
     joystick = IncludeLaunchDescription(
@@ -61,10 +61,10 @@ def generate_launch_description():
     # Run the spawner node from the gazebo_ros package. The entity name doesn't really matter if you only have a single robot.
     spawn_entity = Node(package='gazebo_ros', executable='spawn_entity.py',
                         arguments=['-topic', 'robot_description',
-                                   '-entity', 'my_bot',
-                                #    '-robot_namespace', robot_name
+                                   '-entity', 'my_robot_4',
+                                   '-robot_namespace', robot_name
                                    ],
-                        # namespace=robot_name,
+                        namespace=robot_name,
                         remappings=remappings,
                         output='screen')
 
@@ -93,7 +93,7 @@ def generate_launch_description():
             on_start=[diff_drive_spawner],
         )
     )
-    
+
 # Controller update?
     joint_broad_spawner = Node(
         package="controller_manager",
@@ -125,7 +125,7 @@ def generate_launch_description():
     )
 
     robot_namespace = DeclareLaunchArgument(
-            'robot_name4',
+            'robot_name',
             default_value='robot',
             description='Namespace of robot to spawn')
 
@@ -154,11 +154,11 @@ def generate_launch_description():
         twist_mux,
         # delayed_controller_manager,
         # delayed_diff_drive_spawner,
-        diff_drive_spawner,
+        # diff_drive_spawner,
         # delayed_joint_broad_spawner,
-        joint_broad_spawner,
+        # joint_broad_spawner,
         # delayed_joint_piston_spawner,
-        joint_piston_spawner,
+        # joint_piston_spawner,
         robot_namespace,
         spawn_entity
     ])
