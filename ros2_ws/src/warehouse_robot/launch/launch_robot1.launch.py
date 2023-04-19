@@ -84,7 +84,7 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=["robot_1_diff_cont", "--controller-manager-timeout", "30"],
-        # namespace=robot_name
+        namespace=robot_name
     )
 
     delayed_diff_drive_spawner = RegisterEventHandler(
@@ -99,7 +99,7 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=["robot_1_joint_broad", "--controller-manager-timeout", "30"],
-        # namespace=robot_name
+        namespace=robot_name
     )
 
     delayed_joint_broad_spawner = RegisterEventHandler(
@@ -114,7 +114,7 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=["robot_1_piston_cont", "--controller-manager-timeout", "30"],
-        # namespace=robot_name
+        namespace=robot_name
     )
 
     delayed_joint_piston_spawner = RegisterEventHandler(
@@ -155,11 +155,11 @@ def generate_launch_description():
         # delayed_controller_manager,
         # controller_manager,
         # delayed_diff_drive_spawner,
-        # diff_drive_spawner,
+        diff_drive_spawner,
         # delayed_joint_broad_spawner,
-        # joint_broad_spawner,
+        joint_broad_spawner,
         # delayed_joint_piston_spawner,
-        # joint_piston_spawner,
+        joint_piston_spawner,
         robot_namespace,
         spawn_entity
     ])

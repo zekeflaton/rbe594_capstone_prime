@@ -83,8 +83,8 @@ def generate_launch_description():
     diff_drive_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["diff_cont", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
-        # namespace=robot_name
+        arguments=["robot_5_diff_cont", "--controller-manager-timeout", "30"],
+        namespace=robot_name
     )
 
     delayed_diff_drive_spawner = RegisterEventHandler(
@@ -98,8 +98,8 @@ def generate_launch_description():
     joint_broad_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_broad", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
-        # namespace=robot_name
+        arguments=["robot_5_joint_broad", "--controller-manager-timeout", "30"],
+        namespace=robot_name
     )
 
     delayed_joint_broad_spawner = RegisterEventHandler(
@@ -113,8 +113,8 @@ def generate_launch_description():
     joint_piston_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["piston_cont", "--controller-manager", "/controller_manager", "--controller-manager-timeout", "30"],
-        # namespace=robot_name
+        arguments=["robot_5_piston_cont", "--controller-manager-timeout", "30"],
+        namespace=robot_name
     )
 
     delayed_joint_piston_spawner = RegisterEventHandler(
@@ -126,7 +126,7 @@ def generate_launch_description():
 
     robot_namespace = DeclareLaunchArgument(
             'robot_name',
-            default_value='robot',
+            default_value='robot_5',
             description='Namespace of robot to spawn')
 
     # Code for delaying a node (I haven't tested how effective it is)
@@ -154,11 +154,11 @@ def generate_launch_description():
         twist_mux,
         # delayed_controller_manager,
         # delayed_diff_drive_spawner,
-        # diff_drive_spawner,
+        diff_drive_spawner,
         # delayed_joint_broad_spawner,
-        # joint_broad_spawner,
+        joint_broad_spawner,
         # delayed_joint_piston_spawner,
-        # joint_piston_spawner,
+        joint_piston_spawner,
         robot_namespace,
         spawn_entity
     ])
