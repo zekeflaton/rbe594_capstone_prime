@@ -3,7 +3,7 @@
 
     <xacro:macro name="piston" params="prefix">
         <joint name="joint_${prefix}" type="prismatic">
-            <parent link="carcaca" />
+            <parent link="base_link" />
             <child link="${prefix}" />
             <dynamics friction="5.0" />
             <origin rpy="0 0 0" xyz="0 0 0.1318" />
