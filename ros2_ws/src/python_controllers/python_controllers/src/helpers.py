@@ -19,6 +19,9 @@ class RobotTask(object):
         self.has_shelf = False
         self.complete = False
 
+    def __repr__(self):
+        return "python_controllers.src.helpers.RobotTask:\n\tpick_up_location: {}\n\tdrop_off_location: {}\n\thas_shelf: {}\n\tcomplete: {}\n".format(self.pick_up_location, self.drop_off_location, self.has_shelf, self.complete)
+
 
 class Pose(object):
 
@@ -92,7 +95,7 @@ class BatteryCharge(object):
         :param float/None initial_charge: amount of initial charge
         """
         if initial_charge is None:
-            self.battery_charge = self.MIN_CHARGE
+            self.battery_charge = self.MAX_CHARGE
         else:
             self.battery_charge = self.bound_value_by_min_and_max(
                 value=initial_charge,
