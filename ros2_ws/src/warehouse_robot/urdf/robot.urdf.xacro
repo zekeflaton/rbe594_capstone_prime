@@ -11,9 +11,9 @@
 
   <xacro:include filename="$(find warehouse_robot)/urdf/robot_parts/traction_wheel.xacro" />
 
-  <!-- <xacro:include filename="$(find warehouse_robot)/urdf/robot_parts/tray.xacro" /> -->
+  <xacro:include filename="$(find warehouse_robot)/urdf/robot_parts/tray.xacro" />
 
-  <!-- <xacro:include filename="$(find warehouse_robot)/urdf/robot_parts/piston.xacro" /> -->
+  <xacro:include filename="$(find warehouse_robot)/urdf/robot_parts/piston.xacro" />
 
   <xacro:include filename="$(find warehouse_robot)/urdf/robot_parts/omni_wheel.xacro" />
 
