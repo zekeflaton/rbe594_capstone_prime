@@ -6,7 +6,7 @@
         <joint name="joint_${prefix}" type="continuous">
             <parent link="piston" />
             <child link="${prefix}" />
-            <!-- <dynamics friction="5.0" /> -->
+            <dynamics friction="5.0" />
             <origin rpy="0 0 0" xyz="0 0 0" />
             <axis xyz="0 0 1" />
         </joint>
