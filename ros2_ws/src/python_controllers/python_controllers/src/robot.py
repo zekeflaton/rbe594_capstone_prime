@@ -22,7 +22,7 @@ class Robot(object):
 
     def __init__(self, robot_name, charge_locations, orchestrator, max_x, max_y, initial_pose,
                  end_pose=None, motion_planner=None, metrics_file_path=None,
-                 tags_filepath="../src/tags_file.pkl"):
+                 tags_filepath="../src/tags_file.pkl", debug=False):
         """
 
         :param str robot_name: name of the robot
@@ -35,6 +35,7 @@ class Robot(object):
         :param BaseMotionPlanner/None motion_planner: Optional override for a motion planner class
         :param str/None metrics_file_path: Optional file path to save metrics
         :param str tags_filepath: File path where april tag information is saved
+        :param bool debug: whether to print debug messages
 
         """
         self._path = []
@@ -55,6 +56,8 @@ class Robot(object):
         self.metrics_file_path = metrics_file_path
         self._nav = BasicNavigator()
         self.tags = tags
+        self._current_task = None
+        self.debug = debug
 
     def plan_path(self):
         """
@@ -121,14 +124,15 @@ class Robot(object):
         # test which axis the robot is aligned on
         # add forward and backward moves
         movement = 0.5
+        cost_multiplier = 1  # Apply a cost modifier if we move onto a shelf node.  Used below.
         if theta_base == 0:
-            coordinates.append((x_base + movement, y_base, theta_base))
+            coordinates.append([(x_base + movement, y_base, theta_base), cost_multiplier])
         elif theta_base == 90:
-            coordinates.append((x_base, y_base + movement, theta_base))
+            coordinates.append([(x_base, y_base + movement, theta_base), cost_multiplier])
         elif theta_base == 180:
-            coordinates.append((x_base - movement, y_base, theta_base))
+            coordinates.append([(x_base - movement, y_base, theta_base), cost_multiplier])
         elif theta_base == 270:
-            coordinates.append((x_base, y_base - movement, theta_base))
+            coordinates.append([(x_base, y_base - movement, theta_base), cost_multiplier])
 
         # correct turns in edge cases
         ccw_turn = theta_base - 90  # 90 degrees
@@ -139,21 +143,26 @@ class Robot(object):
             cw_turn = 0
 
         # add possible turns
-        coordinates.append((x_base, y_base, ccw_turn))
-        coordinates.append((x_base, y_base, cw_turn))
+        cost_multiplier = 0  #  Don't apply additional cost of getting onto a shelf node if we're already there.  turning is ok.
+        coordinates.append([(x_base, y_base, ccw_turn), cost_multiplier])
+        coordinates.append([(x_base, y_base, cw_turn), cost_multiplier])
 
-        for pose_tuple in coordinates:
+        for pose_tuple, cost_multiplier in coordinates:
             x, y, _ = pose_tuple
             # Ensure that the location has a valid tag and that the orchestrator has not locked the point
-            if not self.orchestrator.is_pt_locked((x, y)) and (x, y, 0.011, 0, 0, 0) in self.tags.values():
-                all_possible_actions.append((pose_tuple, motion_planner.cost(pose_tuple, self.end_pose.get_2d_pose())))
+            if not self.orchestrator.is_pt_locked((x, y)) and (x, y, 0, 0, 0, 0) in self.tags.values():
+                cost = motion_planner.cost(pose_tuple, self.end_pose.get_2d_pose())
+                # If the location is where a shelf is, increase the cost significantly to try and avoid going through here unless absolutely necessary.
+                if (x, y, 0, 0, 0, 0) in list(self.orchestrator.shelves.values()):
+                    cost = cost + 5000*cost_multiplier
+                all_possible_actions.append((pose_tuple, cost))
         
         return all_possible_actions
 
     def get_next_two_points(self):
         """
         Returns the next two path points
-        :return: (Tuple(Tuple))
+        :return: tuple(python_controllers.src.helpers.Pose | None): return next 2 points of the path if they exist.  Only x and y coordinates.
         """
 
         # If the robot is not at the end pose and we do not have a planned path, then plan one.
@@ -161,39 +170,55 @@ class Robot(object):
             self.plan_path()
 
         if len(self._path) > 1:
-            return self._path[0], self._path[1]
+            first_point = Pose(x=self._path[0][0], y=self._path[0][1], yaw=0)
+            second_point = Pose(x=self._path[1][0], y=self._path[1][1], yaw=0)
+            return first_point, second_point
         elif len(self._path) == 1:
-            return self._path[0], None
+            first_point = Pose(x=self._path[0][0], y=self._path[0][1], yaw=0)
+            return first_point, None
         else:
             return None, None
 
     def move_robot(self):
-        if self.current_pose in self.charge_locations and not self._path:
-            # TODO change this hardcoded value to something based on research
-            self.battery_charge.charge_battery(5)
+        # if the robot is at a charge location task, then spend the cycle charging
+        if self.current_pose in self.charge_locations and not self._current_task:
+            if self.debug:
+                print("Robot {} is spending the cycle charging".format(self.robot_name))
+            self.battery_charge.charge_battery(BatteryCharge.CHARGE_PER_CYCLE)
         else:
+            # Always drain the battery by this amount
+            self.battery_charge.drain_battery(BatteryCharge.DRAIN_PER_CYCLE)
 
-            waypoints = []
-            # while self._path:
-            next_path_pose = self._path.pop(0)
-            print(next_path_pose)
+            if self._path:
+                # Since we're going to move, get the next waypoint and drain the battery for the upcoming move cycle
+                # motion planner path uses tuple of floats (x, y, theta). So convert this back to a pose.
+                next_path_pose = self._path.pop(0)
+                next_path_pose = Pose(x=next_path_pose[0], y=next_path_pose[1], yaw=next_path_pose[2])
+                self.battery_charge.drain_battery(BatteryCharge.DRAIN_PER_MOVE)
+            else:
+                path_was_planned = False
+                if self.end_pose and self.current_pose != self.end_pose:
+                    path_was_planned = self.plan_path()  # returns True if path planned successfully
+                if not path_was_planned:
+                    # No path exists and we were not able to plan one, are already at the end pose, or don't have an end pose set
+                    print("Robot ({}) did not move this cycle".format(self.robot_name))
+                    return
+
             # Set our demo's initial pose
             # http://docs.ros.org/en/noetic/api/geometry_msgs/html/msg/PoseStamped.html
             next_pose_stamped = create_pose_stamped(
                 nav=self._nav,
-                x=next_path_pose[0] * 1.,  # convert to a float
-                y=next_path_pose[1] * 1.,  # convert to a float
-                z=0 * 1.,  # convert to a float
-                roll=0 * 1.,  # convert to a float
-                pitch=0 * 1.,  # convert to a float
-                yaw=next_path_pose[2] * 1.,  # convert to a float
+                x=next_path_pose.x * 1.,  # convert to a float
+                y=next_path_pose.y * 1.,  # convert to a float
+                z=next_path_pose.z * 1.,  # convert to a float
+                roll=next_path_pose.roll * 1.,  # convert to a float
+                pitch=next_path_pose.pitch * 1.,  # convert to a float
+                yaw=next_path_pose.z * 1.,  # convert to a float
             )
             # http: // wiki.ros.org / tf2 / Tutorials / Quaternions
             # https: // answers.unity.com / questions / 147712 / what - is -affected - by - the - w - in -quaternionxyzw.html
             # https://www.programcreek.com/python/example/70252/geometry_msgs.msg.PoseStamped
-            waypoints.append(next_pose_stamped)
-
-            self._nav.followWaypoints(waypoints)
+            self._nav.followWaypoints([next_pose_stamped])
             while not self._nav.isTaskComplete():
                 feedback = self._nav.getFeedback()
                 print(feedback)
@@ -201,16 +226,29 @@ class Robot(object):
                 #     self._nav.cancelTask()
 
             result = self._nav.getResult()
+            self.current_pose = next_path_pose
             print(result)
 
             for observer in self.observers:
                 observer.__call__(self.current_pose)
-            # TODO remove this hardcoded drain amount with a value based on load, turning, movement, etc
-            self.battery_charge.drain_battery(1.0)
-        
-        # mark that the robot has reached the shelf
-        if self.current_pose == self.shelf_pose:
-            self.has_shelf = True
+
+        # if a task exists, update its status if necessary
+        if self._current_task:
+            # mark that the robot has reached the shelf
+            if self.current_pose == self._current_task.pick_up_location:
+                # TODO Control piston to lift shelf
+                print("Robot {} has picked up the shelf".format(self.robot_name))
+                self.orchestrator.shelves[self._current_task.shelf_name] = None
+                self.has_shelf = True
+                self._current_task.has_shelf = True
+                self.end_pose = self._current_task.drop_off_location  # Update end pose to drop off location
+            elif self.current_pose == self._current_task.drop_off_location:
+                # TODO Control piston to lower shelf
+                print("Robot {} has completed it's task".format(self.robot_name))
+                self.orchestrator.shelves[self._current_task.shelf_name] = self.current_pose.get_6d_pose()
+                self._current_task = None
+                # Update end pose to charge station unless new tasking overwrites this
+                self.end_pose = self.charge_locations[int(self.robot_name)]
 
     def subscribe_to_movement(self, func):
         self.observers.append(func)
@@ -228,11 +266,11 @@ class Robot(object):
 
     def is_done(self):
         """
-        The robot is considered "done" and available for tasking if it has a shelf and is at the end/goal pose
+        The robot is considered "done" and available for tasking if it does not have a current task
 
         :return: bool is_done:
         """
-        return self.current_pose == self.end_pose and self.has_shelf
+        return not self._current_task
 
 
     @property
@@ -248,4 +286,14 @@ class Robot(object):
             path.append(parent[path[-1]])
         path.reverse()
         return path
+
+    def assign_new_task(self, task):
+        """
+        Get a new task, set the pick up point as the new end pose, plan the path
+
+        :param RobotTask task: RobotTask instance
+        """
+        self._current_task = task
+        self.end_pose = self._current_task.pick_up_location
+        self.plan_path()
 

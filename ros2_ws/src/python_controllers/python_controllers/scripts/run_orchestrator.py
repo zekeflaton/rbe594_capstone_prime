@@ -8,7 +8,8 @@ from python_controllers.src.orchestrator import (
 )
 from python_controllers.src.helpers import (
     pose_of_tag,
-    Pose
+    Pose,
+    RobotTask
 )
 from python_controllers.src.shelf_locations import shelves
 from python_controllers.src.tag_locations import tags
@@ -34,6 +35,7 @@ def main(num_robots, requests_to_make, DEBUG=False):
         shelves=shelves,
         charge_locations=charge_locations,
         size=(9, 7),
+        debug=DEBUG,
     )
 
     if num_robots > len(charge_locations):
@@ -43,18 +45,23 @@ def main(num_robots, requests_to_make, DEBUG=False):
 
     # init each robot
     for count, start in enumerate(starts):
-        orchestrator.add_robot(count, start)
+        orchestrator.add_robot(str(count), start)
 
     # create a queue of requests to be handled when a robot
     # is available
-    goals = []
-    while len(goals) > 0:
-        orchestrator.make_request(goals.pop(0))
 
 
     if DEBUG:
-        for i, robot in orchestrator.robots:
-            robot.update_end_pose(Pose(i, i, 0, 0, 0, 0))
+        print(orchestrator.robots)
+        o = orchestrator
+        r = o.robots["0"]
+        for i, robot in orchestrator.robots.items():
+            task = RobotTask(
+                shelf_name="D6",
+                drop_off_location=Pose(int(i), int(i), 0, 0, 0, 0),
+                shelves=orchestrator.shelves
+            )
+            orchestrator.make_request(task)
         embed(
             header="1:\n"
                    "orchestrator.make_request(goal_pose)\n"
