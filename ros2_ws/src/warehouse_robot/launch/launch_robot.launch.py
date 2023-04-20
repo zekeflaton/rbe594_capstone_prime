@@ -93,7 +93,7 @@ def generate_launch_description():
             on_start=[diff_drive_spawner],
         )
     )
-    
+
 # Controller update?
     joint_broad_spawner = Node(
         package="controller_manager",

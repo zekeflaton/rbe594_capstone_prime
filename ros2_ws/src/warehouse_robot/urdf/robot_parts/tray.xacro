@@ -2,7 +2,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
 
-    <xacro:macro name="tray" params="prefix">
+    <xacro:macro name="tray" params="namespace prefix">
         <joint name="joint_${prefix}" type="continuous">
             <parent link="piston" />
             <child link="${prefix}" />

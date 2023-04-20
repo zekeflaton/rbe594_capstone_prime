@@ -108,17 +108,17 @@ def generate_launch_description():
             'robot_name',
             default_value='robot',
             description='Namespace of robot to spawn')
-    # robot_description = Command(['ros2 param get --hide-type /robot_state_publisher robot_description'])
+    robot_description = Command(['ros2 param get --hide-type /robot_state_publisher robot_description'])
 
-    # controller_params_file = os.path.join(get_package_share_directory(package_name),'config','my_controllers.yaml')
+    controller_params_file = os.path.join(get_package_share_directory(package_name),'config','my_controllers.yaml')
 
-    # controller_manager = Node(
-    #     package="controller_manager",
-    #     executable="ros2_control_node",
-    #     parameters=[{'robot_description': robot_description},
-    #                 controller_params_file],
-    #     # namespace=robot_name
-    # )
+    controller_manager = Node(
+        package="controller_manager",
+        executable="ros2_control_node",
+        parameters=[{'robot_description': robot_description},
+                    controller_params_file],
+        # namespace=robot_name
+    )
 
     # delayed_controller_manager = TimerAction(period=3.0, actions=[controller_manager])
 
@@ -128,7 +128,7 @@ def generate_launch_description():
         # joystick,
         # twist_mux,
         gazebo,
-        # delayed_controller_manager,
+        # controller_manager,
         # spawn_entity,
         # diff_drive_spawner,
         # joint_broad_spawner,

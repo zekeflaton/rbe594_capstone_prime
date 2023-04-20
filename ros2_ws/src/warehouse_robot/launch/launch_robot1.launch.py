@@ -28,10 +28,30 @@ def generate_launch_description():
 
 
 # Update robot name and controller
-    rsp = IncludeLaunchDescription(
-                PythonLaunchDescriptionSource([os.path.join(
-                    get_package_share_directory(package_name),'launch','rsp.launch.py'
-                )]), launch_arguments={'use_sim_time': 'true', 'use_ros2_control': 'true', 'robot_name': robot_name}.items()
+    # rsp = IncludeLaunchDescription(
+    #             PythonLaunchDescriptionSource([os.path.join(
+    #                 get_package_share_directory(package_name),'launch','rsp.launch.py'
+    #             )]), launch_arguments={'use_sim_time': 'true', 'use_ros2_control': 'true', 'robot_name': robot_name}.items()
+    # )
+
+    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
+    # use_ros2_control = LaunchConfiguration('use_ros2_control')
+    # robot_name = LaunchConfiguration('robot_name')
+
+    # Process the URDF file
+    pkg_path = os.path.join(get_package_share_directory('warehouse_robot'))
+    xacro_file = os.path.join(pkg_path,'urdf','robot_1.urdf.xacro')
+    # robot_description_config = xacro.process_file(xacro_file).toxml()
+    robot_description_config = Command(['xacro ', xacro_file, ' use_ros2_control:=', 'true', ' sim_mode:=', 'true', ' namespace:=', 'robot_1'])
+
+    # Create a robot_state_publisher node
+    params = {'robot_description': robot_description_config, 'use_sim_time': use_sim_time}
+    node_robot_state_publisher = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        output='screen',
+        parameters=[params],
+        # namespace=robot_name
     )
 
     joystick = IncludeLaunchDescription(
@@ -47,7 +67,7 @@ def generate_launch_description():
             executable="twist_mux",
             parameters=[twist_mux_params],
             remappings=[('/cmd_vel_out','/diff_cont/cmd_vel_unstamped')],
-            namespace=robot_name
+            # namespace=robot_name
         )
 
 
@@ -62,9 +82,9 @@ def generate_launch_description():
     spawn_entity = Node(package='gazebo_ros', executable='spawn_entity.py',
                         arguments=['-topic', 'robot_description',
                                    '-entity', 'my_robot_1',
-                                   '-robot_namespace', robot_name
+                                #    '-robot_namespace', robot_name
                                    ],
-                        namespace=robot_name,
+                        # namespace=robot_name,
                         remappings=remappings,
                         output='screen')
 
@@ -74,9 +94,9 @@ def generate_launch_description():
         executable="ros2_control_node",
         parameters=[{'robot_description': robot_description},
                     controller_params_file],
-        # namespace=robot_name
+        namespace=robot_name
     )
-
+#     "--remap", "_target_node_name:__node:=dst_node_name",
     delayed_controller_manager = TimerAction(period=3.0, actions=[controller_manager])
 
 # Controller update?
@@ -84,7 +104,7 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=["robot_1_diff_cont", "--controller-manager-timeout", "30"],
-        namespace=robot_name
+        # namespace=robot_name
     )
 
     delayed_diff_drive_spawner = RegisterEventHandler(
@@ -99,7 +119,7 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=["robot_1_joint_broad", "--controller-manager-timeout", "30"],
-        namespace=robot_name
+        # namespace=robot_name
     )
 
     delayed_joint_broad_spawner = RegisterEventHandler(
@@ -114,7 +134,7 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=["robot_1_piston_cont", "--controller-manager-timeout", "30"],
-        namespace=robot_name
+        # namespace=robot_name
     )
 
     delayed_joint_piston_spawner = RegisterEventHandler(
@@ -149,7 +169,8 @@ def generate_launch_description():
 
     # Launch them all!
     return LaunchDescription([
-        rsp,
+        # rsp,
+        node_robot_state_publisher,
         joystick,
         twist_mux,
         # delayed_controller_manager,

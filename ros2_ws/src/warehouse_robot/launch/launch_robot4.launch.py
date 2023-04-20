@@ -28,10 +28,28 @@ def generate_launch_description():
 
 
 # Update robot name and controller
-    rsp = IncludeLaunchDescription(
-                PythonLaunchDescriptionSource([os.path.join(
-                    get_package_share_directory(package_name),'launch','rsp.launch.py'
-                )]), launch_arguments={'use_sim_time': 'true', 'use_ros2_control': 'true', 'robot_name': robot_name}.items()
+    # rsp = IncludeLaunchDescription(
+    #             PythonLaunchDescriptionSource([os.path.join(
+    #                 get_package_share_directory(package_name),'launch','rsp.launch.py'
+    #             )]), launch_arguments={'use_sim_time': 'true', 'use_ros2_control': 'true', 'robot_name': robot_name}.items()
+    # )
+
+    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
+
+    # Process the URDF file
+    pkg_path = os.path.join(get_package_share_directory('warehouse_robot'))
+    xacro_file = os.path.join(pkg_path,'urdf','robot_4.urdf.xacro')
+    # robot_description_config = xacro.process_file(xacro_file).toxml()
+    robot_description_config = Command(['xacro ', xacro_file, ' use_ros2_control:=', 'true', ' sim_mode:=', 'true'])
+
+    # Create a robot_state_publisher node
+    params = {'robot_description': robot_description_config, 'use_sim_time': use_sim_time}
+    node_robot_state_publisher = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        output='screen',
+        parameters=[params],
+        namespace=robot_name
     )
 
     joystick = IncludeLaunchDescription(
@@ -53,7 +71,7 @@ def generate_launch_description():
 
 
 
-    robot_description = Command(['ros2 param get --hide-type /robot_state_publisher robot_description'])
+    robot_description = Command(['ros2 param get --hide-type /robot_4/robot_state_publisher robot_4/robot_description'])
 
 # Need upate controller?
     controller_params_file = os.path.join(get_package_share_directory(package_name),'config','my_controllers.yaml')
@@ -149,16 +167,17 @@ def generate_launch_description():
 
     # Launch them all!
     return LaunchDescription([
-        rsp,
+        # rsp,
+        node_robot_state_publisher,
         joystick,
         twist_mux,
         # delayed_controller_manager,
         # delayed_diff_drive_spawner,
-        diff_drive_spawner,
+        # diff_drive_spawner,
         # delayed_joint_broad_spawner,
-        joint_broad_spawner,
+        # joint_broad_spawner,
         # delayed_joint_piston_spawner,
-        joint_piston_spawner,
+        # joint_piston_spawner,
         robot_namespace,
         spawn_entity
     ])

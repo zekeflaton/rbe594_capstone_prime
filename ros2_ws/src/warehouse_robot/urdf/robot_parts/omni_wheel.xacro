@@ -2,7 +2,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
 
-    <xacro:macro name="omni_wheel" params="prefix pos_X pos_Y pos_Z pos_r pos_p pos_y">
+    <xacro:macro name="omni_wheel" params="namespace prefix pos_X pos_Y pos_Z pos_r pos_p pos_y">
         <joint name="joint_${prefix}_wheel" type="fixed">
             <parent link="base_link" />
             <child link="${prefix}_wheel" />
