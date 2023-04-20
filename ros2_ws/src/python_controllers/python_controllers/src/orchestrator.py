@@ -1,7 +1,6 @@
 import rclpy
 from python_controllers.src.robot import Robot
 from python_controllers.src.helpers import (
-    get_point_from_pose,
     BatteryCharge,
     Pose
 )
@@ -21,6 +20,7 @@ class Orchestrator(object):
         :param str | None metrics_file_path: Optional file path to save metrics
         :param bool debug: whether to print debug messages
         """
+        # Shelves are never removed but their pose values can change to None if they are being carried
         self.shelves = shelves
         self.tags = tags
         self.size = size
@@ -30,6 +30,7 @@ class Orchestrator(object):
         self.deadlock_count = 0
         self.charge_locations = charge_locations
         self.request_queue = []
+
         # this set holds the ids of robots
         # waiting to plan a path. Deadlocked robots
         # also get placed here to wait for a new path
@@ -39,8 +40,39 @@ class Orchestrator(object):
         self.battery_estimate_buffer = 0.2
         self.debug = debug
 
+        # Lock the 4 corners around the shelves to prevent the motion planners from using those points where the legs sit
+        self.locked_shelves = set()  # Tuple(x, y) of all locked shelf locations
+        self.reset_shelf_leg_locks()
+
         rclpy.init()
 
+
+    def reset_shelf_leg_locks(self):
+        """
+        Reset all shelf locks.  Can do this when we pick up a shelf or set one down.
+        :param shelf_name:
+        :return:
+        """
+        # TODO: Can make this more dynamic such that we simply remove shelf points as long as another shelf doesnt have the same leg spot.
+        for x, y in self.locked_shelves:
+            self.locked.remove((x, y))
+            self.locked_shelves.remove((x, y))
+        if self.locked_shelves:
+            print("ERROR: reset_shelf_leg_locks")
+            raise
+        for shelf_name, shelf_pose in self.shelves.items():
+            # print("shelf_name: ", shelf_name, " -- shelf_pose: ", shelf_pose)
+            if shelf_pose:
+                for x_adjust in [-0.5, 0.5]:
+                    for y_adjust in [-0.5, 0.5]:
+                        x, y, z, roll, pitch, yaw = shelf_pose
+                        point_surrounding_shelf_pose = Pose(x+x_adjust, y+y_adjust, 0, 0, 0, 0)
+                        # print("point_surrounding_shelf_pose.get_6d_pose(): ", point_surrounding_shelf_pose.get_6d_pose())
+                        # print("self.tags.values(): ", self.tags.values())
+                        if point_surrounding_shelf_pose.get_6d_pose() in self.tags.values():
+                            print(point_surrounding_shelf_pose.get_xy())
+                            self.locked_shelves.add(point_surrounding_shelf_pose.get_xy())
+                            self.locked.add(point_surrounding_shelf_pose.get_xy())
 
     def add_robot(self, robot_name, initial_pose, end_pose=None):
         """
@@ -115,16 +147,18 @@ class Orchestrator(object):
 
     def lock_cells(self, robot, first, second=None):
         """
-
-        This method should only be called from within the orchestrator
-        as a conveinience for locking pts
+        This method should only be called from within the orchestrator as a convenience
+         for locking pts.  Locks the x and y coordinates for path planning purposes
+        :param python_controllers.src.robot.Robot robot: robot that's using the poses
+        :param python_controllers.src.helpers.Pose first: first pose
+        :param python_controllers.src.helpers.Pose | None second: second pose if available
         """
         if first is not None:
-            self.locked.add(get_point_from_pose(first))
-            robot.locked_cells.append(get_point_from_pose(first))
+            self.locked.add(first.get_xy())
+            robot.locked_cells.append(first.get_xy())
         if second is not None:
-            self.locked.add(get_point_from_pose(second))
-            robot.locked_cells.append(get_point_from_pose(second))
+            self.locked.add(second.get_xy())
+            robot.locked_cells.append(second.get_xy())
 
     def is_done(self):
         '''Test if the current pose matches the goal pose'''

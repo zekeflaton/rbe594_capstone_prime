@@ -53,10 +53,13 @@ def main(num_robots, requests_to_make, DEBUG=False):
 
     if DEBUG:
         print(orchestrator.robots)
+        o = orchestrator
+        r = o.robots["0"]
         for i, robot in orchestrator.robots.items():
             task = RobotTask(
-                pick_up_location=Pose(int(i), int(i), 0, 0, 0, 0),
-                drop_off_location=Pose(int(i), int(i), 0, 0, 0, 0)
+                shelf_name="D6",
+                drop_off_location=Pose(int(i), int(i), 0, 0, 0, 0),
+                shelves=orchestrator.shelves
             )
             orchestrator.make_request(task)
         embed(

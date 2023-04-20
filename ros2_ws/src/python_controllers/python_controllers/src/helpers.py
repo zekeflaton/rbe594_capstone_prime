@@ -2,19 +2,18 @@ import math
 import pickle
 import numpy as np
 from nav2_simple_commander.robot_navigator import PoseStamped
-from dataclasses import dataclass, field
-from typing import Any
-
 
 
 class RobotTask(object):
-    def __init__(self, pick_up_location, drop_off_location):
+    def __init__(self, shelf_name, drop_off_location, shelves):
         """
 
-        :param Posepick_up_location: pose of pick up location
+        :param str shelf_name: e.g. "D6".  Shelf name as listed in the world file
         :param Pose drop_off_location: Pose of drop off location
+        :param dict shelves: keys are shelf names, values are Tuple(float) or the pose (x, y, z, roll, pitch, yaw)
         """
-        self.pick_up_location = pick_up_location
+        self.shelf_name = shelf_name
+        self.pick_up_location = Pose.pose_from_6d_tuple(shelves[shelf_name])
         self.drop_off_location = drop_off_location
         self.has_shelf = False
         self.complete = False
@@ -51,7 +50,7 @@ class Pose(object):
         """
         return self.x, self.y, self.yaw
 
-    def get_3d_pose(self):
+    def get_6d_pose(self):
         """
         Return 3d dimension pose (x, y, z, roll, pitch, yaw)
         :return: Tuple(float) pose:
@@ -62,9 +61,22 @@ class Pose(object):
     def theta(self):
         return self.yaw
 
+    def get_xy(self):
+        """
+        returns x and y
+        :return: Tuple(float):
+        """
+        return self.x, self.y
+
     @classmethod
     def manhattan_distance(cls, pose1, pose2):
         return abs(pose1.x - pose2.x) + abs(pose1.y - pose2.y)
+
+    @classmethod
+    def pose_from_6d_tuple(cls, tuple):
+        x, y, z, roll, pitch, yaw = tuple
+        return Pose(x=x, y=y, z=z, roll=roll, pitch=pitch, yaw=yaw)
+
 
     def __str__(self):
         return "Pose(x: {}\ty: {}\tz: {}\troll: {}\tpitch: {}\tyaw: {})\n".format(
@@ -81,13 +93,16 @@ class Pose(object):
             return True
         return False
 
+    def __hash__(self):
+        return hash(str(self))
+
 
 class BatteryCharge(object):
     MIN_CHARGE = 0.0
     MAX_CHARGE = 100.0
-    DRAIN_PER_MOVE = 3.0
-    DRAIN_PER_CYCLE = 1.0
-    CHARGE_PER_CYCLE = 20
+    DRAIN_PER_MOVE = 2.0
+    DRAIN_PER_CYCLE = 0.5
+    CHARGE_PER_CYCLE = 20.0
 
     def __init__(self, initial_charge=None):
         """
@@ -248,15 +263,15 @@ def quaternion_from_euler(roll, pitch, yaw):
     return q
 
 
-def get_point_from_pose(pose):
-    """
-    We do not want to account for theta when address deadlocks, so we need to consider only the x and y coordinates
-
-    :param Tuple(int) pose: (x, y, theta) pose of the robot
-    :return: Tuple(int) pt: (x, y) location of the robot
-    """
-    x, y, _ = pose
-    return x, y
+# def get_point_from_pose(pose):
+#     """
+#     We do not want to account for theta when address deadlocks, so we need to consider only the x and y coordinates
+#
+#     :param Tuple(int) pose: (x, y, theta) pose of the robot
+#     :return: Tuple(int) pt: (x, y) location of the robot
+#     """
+#     x, y, _ = pose
+#     return x, y
 
 
 def create_pose_stamped(nav, x, y, z, roll, pitch, yaw):

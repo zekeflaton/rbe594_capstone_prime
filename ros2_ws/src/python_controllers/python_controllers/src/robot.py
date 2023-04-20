@@ -124,14 +124,15 @@ class Robot(object):
         # test which axis the robot is aligned on
         # add forward and backward moves
         movement = 0.5
+        cost_multiplier = 1  # Apply a cost modifier if we move onto a shelf node.  Used below.
         if theta_base == 0:
-            coordinates.append((x_base + movement, y_base, theta_base))
+            coordinates.append([(x_base + movement, y_base, theta_base), cost_multiplier])
         elif theta_base == 90:
-            coordinates.append((x_base, y_base + movement, theta_base))
+            coordinates.append([(x_base, y_base + movement, theta_base), cost_multiplier])
         elif theta_base == 180:
-            coordinates.append((x_base - movement, y_base, theta_base))
+            coordinates.append([(x_base - movement, y_base, theta_base), cost_multiplier])
         elif theta_base == 270:
-            coordinates.append((x_base, y_base - movement, theta_base))
+            coordinates.append([(x_base, y_base - movement, theta_base), cost_multiplier])
 
         # correct turns in edge cases
         ccw_turn = theta_base - 90  # 90 degrees
@@ -142,21 +143,26 @@ class Robot(object):
             cw_turn = 0
 
         # add possible turns
-        coordinates.append((x_base, y_base, ccw_turn))
-        coordinates.append((x_base, y_base, cw_turn))
+        cost_multiplier = 0  #  Don't apply additional cost of getting onto a shelf node if we're already there.  turning is ok.
+        coordinates.append([(x_base, y_base, ccw_turn), cost_multiplier])
+        coordinates.append([(x_base, y_base, cw_turn), cost_multiplier])
 
-        for pose_tuple in coordinates:
+        for pose_tuple, cost_multiplier in coordinates:
             x, y, _ = pose_tuple
             # Ensure that the location has a valid tag and that the orchestrator has not locked the point
-            if not self.orchestrator.is_pt_locked((x, y)) and (x, y, 0.011, 0, 0, 0) in self.tags.values():
-                all_possible_actions.append((pose_tuple, motion_planner.cost(pose_tuple, self.end_pose.get_2d_pose())))
+            if not self.orchestrator.is_pt_locked((x, y)) and (x, y, 0, 0, 0, 0) in self.tags.values():
+                cost = motion_planner.cost(pose_tuple, self.end_pose.get_2d_pose())
+                # If the location is where a shelf is, increase the cost significantly to try and avoid going through here unless absolutely necessary.
+                if (x, y, 0, 0, 0, 0) in list(self.orchestrator.shelves.values()):
+                    cost = cost + 5000*cost_multiplier
+                all_possible_actions.append((pose_tuple, cost))
         
         return all_possible_actions
 
     def get_next_two_points(self):
         """
         Returns the next two path points
-        :return: (Tuple(Tuple))
+        :return: tuple(python_controllers.src.helpers.Pose | None): return next 2 points of the path if they exist.  Only x and y coordinates.
         """
 
         # If the robot is not at the end pose and we do not have a planned path, then plan one.
@@ -164,9 +170,12 @@ class Robot(object):
             self.plan_path()
 
         if len(self._path) > 1:
-            return self._path[0], self._path[1]
+            first_point = Pose(x=self._path[0][0], y=self._path[0][1], yaw=0)
+            second_point = Pose(x=self._path[1][0], y=self._path[1][1], yaw=0)
+            return first_point, second_point
         elif len(self._path) == 1:
-            return self._path[0], None
+            first_point = Pose(x=self._path[0][0], y=self._path[0][1], yaw=0)
+            return first_point, None
         else:
             return None, None
 
@@ -223,18 +232,20 @@ class Robot(object):
             for observer in self.observers:
                 observer.__call__(self.current_pose)
 
-        # if a task exists, update it's status if necessary
+        # if a task exists, update its status if necessary
         if self._current_task:
             # mark that the robot has reached the shelf
             if self.current_pose == self._current_task.pick_up_location:
                 # TODO Control piston to lift shelf
                 print("Robot {} has picked up the shelf".format(self.robot_name))
+                self.orchestrator.shelves[self._current_task.shelf_name] = None
                 self.has_shelf = True
                 self._current_task.has_shelf = True
                 self.end_pose = self._current_task.drop_off_location  # Update end pose to drop off location
             elif self.current_pose == self._current_task.drop_off_location:
                 # TODO Control piston to lower shelf
                 print("Robot {} has completed it's task".format(self.robot_name))
+                self.orchestrator.shelves[self._current_task.shelf_name] = self.current_pose.get_6d_pose()
                 self._current_task = None
                 # Update end pose to charge station unless new tasking overwrites this
                 self.end_pose = self.charge_locations[int(self.robot_name)]
