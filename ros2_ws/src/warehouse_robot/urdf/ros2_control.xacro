@@ -21,15 +21,4 @@
         </plugin>
     </gazebo>
 
-    <transmission name="tran1">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_piston">
-          <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="motor1">
-          <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-          <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-
 </robot>

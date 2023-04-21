@@ -3,7 +3,7 @@
 
   <!--=========================== PLUGINS ===========================-->
 
-  <!-- <xacro:include filename="$(find warehouse_robot)/urdf/ros2_control.xacro" /> -->
+  <xacro:include filename="$(find warehouse_robot)/urdf/ros2_control.xacro" />
 
   <!--=========================== ROBOT PARTS ===========================-->
 
@@ -23,4 +23,9 @@
 
     <xacro:include filename="$(find warehouse_robot)/urdf/sensors/camera.xacro" />
 
+<!-- <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+
+    </plugin>
+  </gazebo> -->
 </robot>
