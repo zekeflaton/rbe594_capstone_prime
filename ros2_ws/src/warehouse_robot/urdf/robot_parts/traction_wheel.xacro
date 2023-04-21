@@ -63,7 +63,7 @@
 
             <!-- kinematics -->
             <wheel_separation>0.386</wheel_separation>
-            <wheel_diameter>0.0508</wheel_diameter>
+            <wheel_diameter>0.1016</wheel_diameter>
 
             <!-- limits -->
             <max_wheel_torque>3</max_wheel_torque>
