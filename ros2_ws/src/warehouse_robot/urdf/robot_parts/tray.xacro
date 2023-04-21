@@ -13,7 +13,7 @@
 
         <gazebo reference="${prefix}">
             <selfCollide>true</selfCollide>
-            <mu1 value="5" />
+            <mu value="5" />
             <mu2 value="5" />
             <kp value="10000000.0" />
             <kd value="10000" />

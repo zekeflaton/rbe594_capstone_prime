@@ -11,15 +11,6 @@ controller_manager:
 
     # piston_cont:
       # type: forward_command_controller/ForwardCommandController
-        # type: effort_controllers/JointPositionController
-      # type: position_controllers/JointPositionController
-
-    forward_position_controller:
-      type: position_controllers/JointGroupPositionController
-
-    # piston_cont:
-
-    #   type: joint_trajectory_controller/JointTrajectoryController
 
     piston_vel_cont:
       type: velocity_controllers/JointGroupVelocityController
@@ -93,78 +84,9 @@ diff_cont:
 #       p: .1
 #       i: .1
 #       d: 0
-    # constraints:
-    #   stopped_velocity_tolerance: 0.01 # Defaults to 0.01
-    #   goal_time: 0.0 # Defaults to 0.0 (start immediately)
-
-# piston_cont:
-#   ros__parameters:
-#     joint_name: joint_piston
-#     # command_topic: /joint_states
-#     position: 0.04
-#     velocity: 0.1
-#     acceleration: 0.2
-
-forward_position_controller:
-  ros__parameters:
-    joints: ['joint_piston']
-    pid:
-      p: 10000
-      i: 10000
-      d: 0
-
-piston_cont:
-  ros__parameters:
-    joints: ['joint_piston']
-    command_interfaces: ['position']
-    state_interfaces:
-      - position
-      - velocity
-
-    allow_partial_joints_goal: true
-
-    # Name of the joint being controlled
-      # joint_name: "joint_piston"
-
-    # Configuration for the PID controller used by the JointTrajectoryController
-    pid:
-      # Proportional gain
-      p: 100.0
-
-      # Integral gain
-      i: 0.1
-
-      # Derivative gain
-      d: 10.0
-
-      # Anti-windup gain
-      i_clamp: 1.0
-
-    # Configuration for the JointTrajectoryController
-    trajectory:
-      # Publishes current state of controller at this rate
-      state_publish_rate: 50
-
-      # Interpolation time for trajectory points
-      # This is the time that the joint will take to move
-      # between each point in the trajectory
-      # You can adjust this value based on the speed you want
-      # the joint to move at.
-      # In this case, the joint will move to the target position
-      # in 1 second.
-      interpolation_factor: 1.0
-
-      # List of trajectory points
-      points:
-        # The first point in the trajectory is the current position
-        - positions: [0.0]
-          velocities: [0.0]
-          time_from_start: {sec: 0, nanosec: 0}
-
-        # The second point in the trajectory is the target position
-        - positions: [0.04]
-          velocities: [0.0]
-          time_from_start: {sec: 1, nanosec: 0}
+#     constraints:
+#       stopped_velocity_tolerance: 0.01 # Defaults to 0.01
+#       goal_time: 0.0 # Defaults to 0.0 (start immediately)
 
 piston_vel_cont:
   ros__parameters:
