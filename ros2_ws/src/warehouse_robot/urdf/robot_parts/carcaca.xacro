@@ -32,7 +32,7 @@
 
         <link name="${base_link}">
             <inertial>
-                <mass value="2.4" />
+                <mass value="10" />
                 <origin rpy="0  0  0" xyz="0  0  0.0118" />
                 <inertia ixx="0.019995" ixy="0.0" ixz="0.0"
                 iyy="0.019995" iyz="0.0"

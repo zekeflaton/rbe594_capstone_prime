@@ -3,16 +3,16 @@
 
     <xacro:macro name="piston" params="prefix">
         <joint name="joint_${prefix}" type="prismatic">
-            <parent link="base_link" />
+            <parent link="carcaca" />
             <child link="${prefix}" />
-            <dynamics friction="5.0" />
+            <dynamics friction="10.0" />
             <origin rpy="0 0 0" xyz="0 0 0.1318" />
             <axis xyz="0 0 1" />
-            <limit effort="0" lower="0" upper="0.04" velocity="0" />
+            <limit effort="10" lower="0" upper="0.08" velocity="0.8" />
         </joint>
 
         <gazebo reference="${prefix}">
-            <selfCollide>true</selfCollide>
+            <selfCollide>false</selfCollide>
             <mu1 value="0.1" />
             <mu2 value="0.1" />
             <kp value="10000000.0" />

@@ -3,7 +3,7 @@
 
 
     <xacro:macro name="tray" params="prefix">
-        <joint name="joint_${prefix}" type="continuous">
+        <joint name="joint_${prefix}" type="fixed">
             <parent link="piston" />
             <child link="${prefix}" />
             <!-- <dynamics friction="5.0" /> -->
@@ -12,7 +12,7 @@
         </joint>
 
         <gazebo reference="${prefix}">
-            <selfCollide>true</selfCollide>
+            <selfCollide>false</selfCollide>
             <mu1 value="0.1" />
             <mu2 value="0.1" />
             <kp value="10000000.0" />
