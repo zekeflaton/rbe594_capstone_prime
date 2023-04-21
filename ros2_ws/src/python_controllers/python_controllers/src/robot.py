@@ -22,7 +22,7 @@ class Robot(object):
 
     def __init__(self, robot_name, charge_locations, orchestrator, max_x, max_y, initial_pose,
                  end_pose=None, motion_planner=None, metrics_file_path=None,
-                 tags_filepath="../src/tags_file.pkl", debug=False):
+                 tags_filepath="../src/tags_file.pkl", debug=False, color=None):
         """
 
         :param str robot_name: name of the robot
@@ -36,10 +36,12 @@ class Robot(object):
         :param str/None metrics_file_path: Optional file path to save metrics
         :param str tags_filepath: File path where april tag information is saved
         :param bool debug: whether to print debug messages
+        :param tuple(int) color: tuple of RGB values to define the color the robot should use for images outputs
 
         """
         self._path = []
         self.robot_name = robot_name
+        self.readable_robot_name = str(int(robot_name) + 1)
         self.max_x = max_x
         self.max_y = max_y
         self.current_pose = initial_pose
@@ -58,6 +60,7 @@ class Robot(object):
         self.tags = tags
         self._current_task = None
         self.debug = debug
+        self.color = color
 
     def plan_path(self):
         """
@@ -68,7 +71,7 @@ class Robot(object):
         start_time = time.time()
         parent_dict = {}
         if not self.end_pose:
-            print("No end pose for robot {} so a path could not be planned".format(self.robot_name))
+            print("No end pose for robot {} so a path could not be planned".format(self.readable_robot_name))
             return
         q, list_of_locations = self.motion_planner.initialize(self.current_pose.get_2d_pose(), self.end_pose.get_2d_pose())
         nodes_visited = 0
@@ -179,11 +182,11 @@ class Robot(object):
         else:
             return None, None
 
-    def move_robot(self):
+    def move_robot(self, sim):
         # if the robot is at a charge location task, then spend the cycle charging
-        if self.current_pose in self.charge_locations and not self._current_task:
+        if self.current_pose == self.charge_locations[int(self.robot_name)] and not self._current_task:
             if self.debug:
-                print("Robot {} is spending the cycle charging".format(self.robot_name))
+                print("Robot {} is spending the cycle charging".format(self.readable_robot_name))
             self.battery_charge.charge_battery(BatteryCharge.CHARGE_PER_CYCLE)
         else:
             # Always drain the battery by this amount
@@ -201,33 +204,35 @@ class Robot(object):
                     path_was_planned = self.plan_path()  # returns True if path planned successfully
                 if not path_was_planned:
                     # No path exists and we were not able to plan one, are already at the end pose, or don't have an end pose set
-                    print("Robot ({}) did not move this cycle".format(self.robot_name))
+                    print("Robot ({}) did not move this cycle".format(self.readable_robot_name))
                     return
 
-            # Set our demo's initial pose
-            # http://docs.ros.org/en/noetic/api/geometry_msgs/html/msg/PoseStamped.html
-            next_pose_stamped = create_pose_stamped(
-                nav=self._nav,
-                x=next_path_pose.x * 1.,  # convert to a float
-                y=next_path_pose.y * 1.,  # convert to a float
-                z=next_path_pose.z * 1.,  # convert to a float
-                roll=next_path_pose.roll * 1.,  # convert to a float
-                pitch=next_path_pose.pitch * 1.,  # convert to a float
-                yaw=next_path_pose.z * 1.,  # convert to a float
-            )
-            # http: // wiki.ros.org / tf2 / Tutorials / Quaternions
-            # https: // answers.unity.com / questions / 147712 / what - is -affected - by - the - w - in -quaternionxyzw.html
-            # https://www.programcreek.com/python/example/70252/geometry_msgs.msg.PoseStamped
-            self._nav.followWaypoints([next_pose_stamped])
-            while not self._nav.isTaskComplete():
-                feedback = self._nav.getFeedback()
-                print(feedback)
-                # if feedback.navigation_duration > 600:
-                #     self._nav.cancelTask()
+            if not sim:
+                # Set our demo's initial pose
+                # http://docs.ros.org/en/noetic/api/geometry_msgs/html/msg/PoseStamped.html
+                next_pose_stamped = create_pose_stamped(
+                    nav=self._nav,
+                    x=next_path_pose.x * 1.,  # convert to a float
+                    y=next_path_pose.y * 1.,  # convert to a float
+                    z=next_path_pose.z * 1.,  # convert to a float
+                    roll=next_path_pose.roll * 1.,  # convert to a float
+                    pitch=next_path_pose.pitch * 1.,  # convert to a float
+                    yaw=next_path_pose.z * 1.,  # convert to a float
+                )
+                # http: // wiki.ros.org / tf2 / Tutorials / Quaternions
+                # https: // answers.unity.com / questions / 147712 / what - is -affected - by - the - w - in -quaternionxyzw.html
+                # https://www.programcreek.com/python/example/70252/geometry_msgs.msg.PoseStamped
+                self._nav.followWaypoints([next_pose_stamped])
+                while not self._nav.isTaskComplete():
+                    feedback = self._nav.getFeedback()
+                    print(feedback)
+                    # if feedback.navigation_duration > 600:
+                    #     self._nav.cancelTask()
 
-            result = self._nav.getResult()
+                result = self._nav.getResult()
+                print(result)
+
             self.current_pose = next_path_pose
-            print(result)
 
             for observer in self.observers:
                 observer.__call__(self.current_pose)
@@ -237,14 +242,14 @@ class Robot(object):
             # mark that the robot has reached the shelf
             if self.current_pose == self._current_task.pick_up_location:
                 # TODO Control piston to lift shelf
-                print("Robot {} has picked up the shelf".format(self.robot_name))
+                print("Robot {} has picked up the shelf".format(self.readable_robot_name))
                 self.orchestrator.shelves[self._current_task.shelf_name] = None
                 self.has_shelf = True
                 self._current_task.has_shelf = True
                 self.end_pose = self._current_task.drop_off_location  # Update end pose to drop off location
             elif self.current_pose == self._current_task.drop_off_location:
                 # TODO Control piston to lower shelf
-                print("Robot {} has completed it's task".format(self.robot_name))
+                print("Robot {} has completed it's task".format(self.readable_robot_name))
                 self.orchestrator.shelves[self._current_task.shelf_name] = self.current_pose.get_6d_pose()
                 self._current_task = None
                 # Update end pose to charge station unless new tasking overwrites this
