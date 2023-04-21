@@ -55,17 +55,17 @@ def generate_launch_description():
                         output='screen')
 
 
-    diff_drive_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["diff_cont", "--controller-manager-timeout", "30"],
-    )
+    # diff_drive_spawner = Node(
+    #     package="controller_manager",
+    #     executable="spawner",
+    #     arguments=["diff_cont", "--controller-manager-timeout", "30"],
+    # )
 
-    joint_broad_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["joint_broad", "--controller-manager-timeout", "30"],
-    )
+    # joint_broad_spawner = Node(
+    #     package="controller_manager",
+    #     executable="spawner",
+    #     arguments=["joint_broad", "--controller-manager-timeout", "30"],
+    # )
 
 
     # Code for delaying a node (I haven't tested how effective it is)
@@ -90,11 +90,11 @@ def generate_launch_description():
     #     name='joint_state_publisher_gui'
     # )
 
-    joint_piston_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["piston_cont", "--controller-manager-timeout", "30"],
-    )
+    # joint_piston_spawner = Node(
+    #     package="controller_manager",
+    #     executable="spawner",
+    #     arguments=["piston_cont", "--controller-manager-timeout", "30"],
+    # )
 
 
     # Launch them all!
@@ -104,7 +104,7 @@ def generate_launch_description():
         twist_mux,
         gazebo,
         spawn_entity,
-        diff_drive_spawner,
-        joint_broad_spawner,
-        joint_piston_spawner,
+        # diff_drive_spawner,
+        # joint_broad_spawner,
+        # joint_piston_spawner,
     ])

@@ -27,24 +27,55 @@
                 <mass value="1" />
                 <origin rpy="0 0 0" xyz="0 0 0" />
                 <inertia ixx="0.001" ixy="0.0" ixz="0.0"
-                iyy="0.001" iyz="0.0"
-                izz="0.001" />
+                    iyy="0.001" iyz="0.0"
+                    izz="0.001" />
             </inertial>
             <collision name="${prefix}_collision">
                 <origin rpy="0 0 0" xyz="0 0 0" />
                 <geometry>
-                    <mesh filename="$(find warehouse_robot)/models/laser_robot/wheel/meshes/roda.obj" scale="1 1 1" />
+                    <mesh
+                        filename="$(find warehouse_robot)/models/laser_robot/wheel/meshes/roda.obj"
+                        scale="1 1 1" />
                 </geometry>
             </collision>
             <visual name="${prefix}_visual">
                 <origin rpy="0 0 0" xyz="0 0 0" />
                 <geometry>
-                    <mesh filename="$(find warehouse_robot)/models/laser_robot/wheel/meshes/roda.obj" scale="1 1 1" />
+                    <mesh
+                        filename="$(find warehouse_robot)/models/laser_robot/wheel/meshes/roda.obj"
+                        scale="1 1 1" />
                 </geometry>
             </visual>
         </link>
     </xacro:macro>
 
-    <xacro:traction_wheel prefix="left_wheel" pos_X="0" pos_Y="0.193" pos_Z="0.0507" pos_r="-1.57" pos_p="0" pos_y="0" axis="1"/>
-    <xacro:traction_wheel prefix="right_wheel" pos_X="0" pos_Y="-0.193" pos_Z="0.0507" pos_r="1.57" pos_p="0" pos_y="0" axis="-1"/>
+    <xacro:traction_wheel prefix="left_wheel" pos_X="0" pos_Y="0.193" pos_Z="0.0507" pos_r="-1.57"
+        pos_p="0" pos_y="0" axis="1" />
+    <xacro:traction_wheel prefix="right_wheel" pos_X="0" pos_Y="-0.193" pos_Z="0.0507" pos_r="1.57"
+        pos_p="0" pos_y="0" axis="-1" />
+
+    <gazebo>
+        <plugin name='diff_drive' filename='libgazebo_ros_diff_drive.so'>
+
+            <!-- wheels -->
+            <left_joint>left_wheel_joint</left_joint>
+            <right_joint>right_wheel_joint</right_joint>
+
+            <!-- kinematics -->
+            <wheel_separation>0.386</wheel_separation>
+            <wheel_diameter>0.0508</wheel_diameter>
+
+            <!-- limits -->
+            <max_wheel_torque>20</max_wheel_torque>
+            <max_wheel_acceleration>1.0</max_wheel_acceleration>
+
+            <!-- output -->
+            <publish_odom>true</publish_odom>
+            <publish_odom_tf>false</publish_odom_tf>
+            <publish_wheel_tf>true</publish_wheel_tf>
+
+            <odometry_frame>odom</odometry_frame>
+            <robot_base_frame>base_link</robot_base_frame>
+        </plugin>
+    </gazebo>
 </robot>
