@@ -243,14 +243,20 @@ def quaternion_from_euler(roll, pitch, yaw):
     Converts euler roll, pitch, yaw to quaternion (w in last place)
     https://gist.github.com/salmagro/2e698ad4fbf9dae40244769c5ab74434
 
-    :param float roll:
-    :param float pitch:
-    :param float yaw:
+    :param float roll: degrees
+    :param float pitch: degrees
+    :param float yaw: degrees
     :param list(float) quat: (x, y, z, w)
     Bellow should be replaced when porting for ROS 2 Python tf_conversions is done.
     """
     if yaw == 270:
         yaw = -90
+
+    # Convert to radians before getting values for quaternion calculations
+    roll = math.radians(roll)
+    pitch = math.radians(pitch)
+    yaw = math.radians(yaw)
+
     cy = math.cos(yaw * 0.5)
     sy = math.sin(yaw * 0.5)
     cp = math.cos(pitch * 0.5)
