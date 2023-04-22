@@ -172,11 +172,11 @@ def generate_launch_description():
         twist_mux,
         # delayed_controller_manager,
         # delayed_diff_drive_spawner,
-        diff_drive_spawner,
+        # diff_drive_spawner,
         # delayed_joint_broad_spawner,
-        joint_broad_spawner,
+        # joint_broad_spawner,
         # delayed_joint_piston_spawner,
-        joint_piston_spawner,
+        # joint_piston_spawner,
         robot_namespace,
         spawn_entity
     ])

@@ -42,7 +42,7 @@ def generate_launch_description():
     pkg_path = os.path.join(get_package_share_directory('warehouse_robot'))
     xacro_file = os.path.join(pkg_path,'urdf','robot_1.urdf.xacro')
     # robot_description_config = xacro.process_file(xacro_file).toxml()
-    robot_description_config = Command(['xacro ', xacro_file, ' use_ros2_control:=', 'true', ' sim_mode:=', 'true', ' namespace:=', 'robot_1'])
+    robot_description_config = Command(['xacro ', xacro_file, ' use_ros2_control:=', 'true', ' sim_mode:=', 'true'])
 
     # Create a robot_state_publisher node
     params = {'robot_description': robot_description_config, 'use_sim_time': use_sim_time}
@@ -176,11 +176,11 @@ def generate_launch_description():
         # delayed_controller_manager,
         # controller_manager,
         # delayed_diff_drive_spawner,
-        diff_drive_spawner,
+        # diff_drive_spawner,
         # delayed_joint_broad_spawner,
-        joint_broad_spawner,
+        # joint_broad_spawner,
         # delayed_joint_piston_spawner,
-        joint_piston_spawner,
+        # joint_piston_spawner,
         robot_namespace,
         spawn_entity
     ])

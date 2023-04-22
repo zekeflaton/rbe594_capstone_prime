@@ -3,24 +3,24 @@
 
   <!--=========================== PLUGINS ===========================-->
 
-  <xacro:include filename="$(find warehouse_robot)/urdf/ros2_control.xacro" ns="robot_1" />
+  <!-- <xacro:include filename="$(find warehouse_robot)/urdf/ros2_control.xacro" ns="robot_1" /> -->
 
   <!--=========================== ROBOT PARTS ===========================-->
 
-  <xacro:include filename="$(find warehouse_robot)/urdf/robot_parts/carcaca.xacro" ns="robot_1"/>
+  <xacro:include filename="$(find warehouse_robot)/urdf/robot_parts/carcaca.xacro"/>
 
-  <xacro:include filename="$(find warehouse_robot)/urdf/robot_parts/traction_wheel.xacro" ns="robot_1"/>
+  <xacro:include filename="$(find warehouse_robot)/urdf/robot_parts/traction_wheel.xacro"/>
 
-  <xacro:include filename="$(find warehouse_robot)/urdf/robot_parts/tray.xacro" ns="robot_1"/>
+  <xacro:include filename="$(find warehouse_robot)/urdf/robot_parts/tray.xacro"/>
 
-  <xacro:include filename="$(find warehouse_robot)/urdf/robot_parts/piston.xacro" ns="robot_1"/>
+  <xacro:include filename="$(find warehouse_robot)/urdf/robot_parts/piston.xacro"/>
 
-  <xacro:include filename="$(find warehouse_robot)/urdf/robot_parts/omni_wheel.xacro" ns="robot_1"/>
+  <xacro:include filename="$(find warehouse_robot)/urdf/robot_parts/omni_wheel.xacro"/>
 
   <!--=========================== SENSORS ===========================-->
 
-    <xacro:include filename="$(find warehouse_robot)/urdf/sensors/rplidar.xacro" ns="robot_1"/>
+    <xacro:include filename="$(find warehouse_robot)/urdf/sensors/rplidar.xacro"/>
 
-    <xacro:include filename="$(find warehouse_robot)/urdf/sensors/camera.xacro" ns="robot_1"/>
+    <xacro:include filename="$(find warehouse_robot)/urdf/sensors/camera.xacro"/>
 
 </robot>

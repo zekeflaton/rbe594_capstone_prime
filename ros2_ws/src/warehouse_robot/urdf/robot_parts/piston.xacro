@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-    <xacro:macro name="piston" params="namespace prefix">
+    <xacro:macro name="piston" params="prefix">
         <joint name="joint_${prefix}" type="prismatic">
             <parent link="carcaca" />
             <child link="${prefix}" />
