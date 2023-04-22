@@ -298,7 +298,7 @@ def create_pose_stamped(nav, x, y, z, roll, pitch, yaw):
     pose_stamped.pose.position.x = x
     pose_stamped.pose.position.y = y
     pose_stamped.pose.position.z = z
-    quaternion = quaternion_from_euler(math.radians(roll), math.radians(pitch), math.radians(yaw))
+    quaternion = quaternion_from_euler(roll, pitch, yaw)
     pose_stamped.pose.orientation.x = quaternion[0]
     pose_stamped.pose.orientation.y = quaternion[1]
     pose_stamped.pose.orientation.z = quaternion[2]

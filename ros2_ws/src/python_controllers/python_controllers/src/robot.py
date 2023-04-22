@@ -84,17 +84,18 @@ class Robot(object):
         self.sim = sim
         self.joint_piston_controller = JointPistonNode()
 
-        self._nav.setInitialPose(
-            create_pose_stamped(
-                nav=self._nav,
-                x=self.current_pose.x * 1.,  # convert to a float
-                y=self.current_pose.y * 1.,  # convert to a float
-                z=self.current_pose.z * 1.,  # convert to a float
-                roll=self.current_pose.roll * 1.,  # convert to a float
-                pitch=self.current_pose.pitch * 1.,  # convert to a float
-                yaw=90.,  # convert to a float, hardcode to face up
+        if self.sim:
+            self._nav.setInitialPose(
+                create_pose_stamped(
+                    nav=self._nav,
+                    x=self.current_pose.x * 1.,  # convert to a float
+                    y=self.current_pose.y * 1.,  # convert to a float
+                    z=self.current_pose.z * 1.,  # convert to a float
+                    roll=self.current_pose.roll * 1.,  # convert to a float
+                    pitch=self.current_pose.pitch * 1.,  # convert to a float
+                    yaw=90.,  # convert to a float, hardcode to face up
+                )
             )
-        )
 
     def plan_path(self):
         """
