@@ -19,7 +19,7 @@ class RobotTask(object):
         self.complete = False
 
     def __repr__(self):
-        return "python_controllers.src.helpers.RobotTask:\n\tpick_up_location: {}\n\tdrop_off_location: {}\n\thas_shelf: {}\n\tcomplete: {}\n".format(self.pick_up_location, self.drop_off_location, self.has_shelf, self.complete)
+        return "python_controllers.src.helpers.RobotTask:\n\tshelf_name: {}\tpick_up_location: {}\n\tdrop_off_location: {}\n\thas_shelf: {}\n\tcomplete: {}\n".format(self.shelf_name, self.pick_up_location, self.drop_off_location, self.has_shelf, self.complete)
 
 
 class Pose(object):

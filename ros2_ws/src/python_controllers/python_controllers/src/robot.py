@@ -84,6 +84,18 @@ class Robot(object):
         self.sim = sim
         self.joint_piston_controller = JointPistonNode()
 
+        self._nav.set_initial_pose(
+            next_pose_stamped=create_pose_stamped(
+                nav=self._nav,
+                x=self.current_pose.x * 1.,  # convert to a float
+                y=self.current_pose.y * 1.,  # convert to a float
+                z=self.current_pose.z * 1.,  # convert to a float
+                roll=self.current_pose.roll * 1.,  # convert to a float
+                pitch=self.current_pose.pitch * 1.,  # convert to a float
+                yaw=self.current_pose.z * 1.,  # convert to a float
+            )
+        )
+
     def plan_path(self):
         """
         Plan full path from start to end using A* and avoiding obstacles and store in _path class variable
