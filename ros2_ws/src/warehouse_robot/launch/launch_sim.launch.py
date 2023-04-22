@@ -90,16 +90,9 @@ def generate_launch_description():
     #     name='joint_state_publisher_gui'
     # )
 
-    # joint_piston_spawner = Node(
-    #     package="controller_manager",
-    #     executable="spawner",
-    #     arguments=["piston_cont", "--controller-manager-timeout", "30"],
-    # )
-
     joint_piston_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        # arguments=["forward_position_controller", "--controller-manager-timeout", "30"],
         arguments=["piston_vel_cont", "--controller-manager-timeout", "30"],
     )
 
