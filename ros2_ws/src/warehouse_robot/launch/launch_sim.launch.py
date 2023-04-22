@@ -93,9 +93,8 @@ def generate_launch_description():
     joint_piston_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["piston_cont", "--controller-manager-timeout", "30"],
+        arguments=["piston_vel_cont", "--controller-manager-timeout", "30"],
     )
-
 
     # Launch them all!
     return LaunchDescription([
