@@ -82,7 +82,7 @@ def generate_launch_description():
     spawn_entity = Node(package='gazebo_ros', executable='spawn_entity.py',
                         arguments=['-topic', 'robot_description',
                                    '-entity', 'my_robot_1',
-                                #    '-robot_namespace', robot_name
+                                   '-robot_namespace', robot_name
                                    ],
                         # namespace=robot_name,
                         remappings=remappings,
