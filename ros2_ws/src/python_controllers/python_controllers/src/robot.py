@@ -16,13 +16,32 @@ from python_controllers.src.motion_planners import (
     AStarPlanner
 )
 from python_controllers.src.tag_locations import tags
+from rclpy.node import Node
+from std_msgs.msg import Float64MultiArray
+
+
+class JointPistonNode(Node):
+    def __init__(self):
+        super().__init__("piston_vel_cont")
+        self.piston_joint_publisher_ = self.create_publisher(
+            Float64MultiArray, "piston_vel_cont/commands", 10)
+
+    def publish_piston_up(self):
+        msg = Float64MultiArray()
+        msg.data = [0.2]
+        self.piston_joint_publisher_.publish(msg)
+
+    def publish_piston_down(self):
+        msg = Float64MultiArray()
+        msg.data = [0.0]
+        self.piston_joint_publisher_.publish(msg)
 
 
 class Robot(object):
 
     def __init__(self, robot_name, charge_locations, orchestrator, max_x, max_y, initial_pose,
                  end_pose=None, motion_planner=None, metrics_file_path=None,
-                 tags_filepath="../src/tags_file.pkl", debug=False, color=None):
+                 tags_filepath="../src/tags_file.pkl", debug=False, color=None, sim=False):
         """
 
         :param str robot_name: name of the robot
@@ -37,6 +56,7 @@ class Robot(object):
         :param str tags_filepath: File path where april tag information is saved
         :param bool debug: whether to print debug messages
         :param tuple(int) color: tuple of RGB values to define the color the robot should use for images outputs
+        :param bool sim: are we controlling gazebo robots or simulating it with images
 
         """
         self._path = []
@@ -61,6 +81,8 @@ class Robot(object):
         self._current_task = None
         self.debug = debug
         self.color = color
+        self.sim = sim
+        self.joint_piston_controller = JointPistonNode()
 
     def plan_path(self):
         """
@@ -248,7 +270,8 @@ class Robot(object):
         if self._current_task:
             # mark that the robot has reached the shelf
             if self.current_pose == self._current_task.pick_up_location:
-                # TODO Control piston to lift shelf
+                if not self.sim:
+                    self.joint_piston_controller.publish_piston_up()
                 print("Robot {} has picked up the shelf".format(self.readable_robot_name))
                 self.orchestrator.shelves[self._current_task.shelf_name] = None
                 self.has_shelf = True
@@ -256,7 +279,8 @@ class Robot(object):
                 self.end_pose = self._current_task.drop_off_location  # Update end pose to drop off location
                 self.orchestrator.reset_shelf_leg_locks()
             elif self.current_pose == self._current_task.drop_off_location:
-                # TODO Control piston to lower shelf
+                if not self.sim:
+                    self.joint_piston_controller.publish_piston_down()
                 print("Robot {} has completed it's task".format(self.readable_robot_name))
                 self.orchestrator.shelves[self._current_task.shelf_name] = self.current_pose.get_6d_pose()
                 self._current_task = None

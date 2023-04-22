@@ -223,7 +223,8 @@ class Orchestrator(object):
             motion_planner=self.motion_planner,
             metrics_file_path=self.metrics_file_path,
             debug=self.debug,
-            color=color
+            color=color,
+            sim=self.sim,
         )
         self.waiting_robots.add(robot_name)
         return self.robots[robot_name]
@@ -434,4 +435,3 @@ class Orchestrator(object):
                     # if self.debug: print("end assign_tasks_for_robots")
                     break
         # if self.debug: print("end assign_tasks_for_robots")
-
