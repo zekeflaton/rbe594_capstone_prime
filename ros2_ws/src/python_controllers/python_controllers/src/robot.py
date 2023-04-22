@@ -260,7 +260,7 @@ class Robot(object):
                 # http: // wiki.ros.org / tf2 / Tutorials / Quaternions
                 # https: // answers.unity.com / questions / 147712 / what - is -affected - by - the - w - in -quaternionxyzw.html
                 # https://www.programcreek.com/python/example/70252/geometry_msgs.msg.PoseStamped
-                self._nav.followWaypoints([next_pose_stamped])
+                self._nav.goToPose(next_pose_stamped)
                 while not self._nav.isTaskComplete():
                     feedback = self._nav.getFeedback()
                     print(feedback)
