@@ -30,7 +30,20 @@ def generate_launch_description():
         output='screen',
         parameters=[params]
     )
+    
+    robot_localization_node = Node(
+         package='robot_localization',
+         executable='ekf_node',
+         name='ekf_filter_node',
+         output='screen',
+         parameters=[os.path.join(pkg_path, 'config/ekf.yaml'), {'use_sim_time': use_sim_time}]
+    )
 
+    joint_state_publisher_node = Node(
+        package='joint_state_publisher',
+        executable='joint_state_publisher',
+        name='joint_state_publisher',
+    )
 
     # Launch!
     return LaunchDescription([
@@ -42,6 +55,7 @@ def generate_launch_description():
             'use_ros2_control',
             default_value='true',
             description='Use ros2_control if true'),
-
-        node_robot_state_publisher
+        joint_state_publisher_node,
+        node_robot_state_publisher,
+        robot_localization_node
     ])
