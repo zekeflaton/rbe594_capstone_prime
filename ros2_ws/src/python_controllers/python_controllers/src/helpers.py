@@ -100,8 +100,8 @@ class Pose(object):
 class BatteryCharge(object):
     MIN_CHARGE = 0.0
     MAX_CHARGE = 100.0
-    DRAIN_PER_MOVE = 2.0
-    DRAIN_PER_CYCLE = 0.5
+    DRAIN_PER_MOVE = 0.5
+    DRAIN_PER_CYCLE = 0.1
     CHARGE_PER_CYCLE = 20.0
 
     def __init__(self, initial_charge=None):
@@ -123,12 +123,15 @@ class BatteryCharge(object):
         Drain battery charge by specific amount
 
         :param float drain_amount: amount to drain battery
+        :return bool battery_out_of_charge: is the battery out of charge
         """
+        battery_out_of_charge = False
         if not drain_amount:
             drain_amount = self.DRAIN_PER_MOVE
         if self.battery_charge - drain_amount < 0:
-            print("Robot ran out of juice....oops!")
+            battery_out_of_charge = True
         self.battery_charge = self.bound_value_by_min_and_max(self.battery_charge - drain_amount)
+        return battery_out_of_charge
 
     def charge_battery(self, charge_amount=None):
         """

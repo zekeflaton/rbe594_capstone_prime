@@ -45,6 +45,7 @@ def main(num_robots, requests_to_make, DEBUG=False, save_orch_output=False, sim=
         charge_location_color=(0, 255, 0),  # green
         sim=sim,
         orch_output_filepath=orch_output_filepath,
+        extra_random_requests_to_make=requests_to_make,
     )
 
     if num_robots > len(charge_locations):
@@ -114,7 +115,7 @@ def main(num_robots, requests_to_make, DEBUG=False, save_orch_output=False, sim=
         )
     else:
         # loop until all robots are done
-        while not orchestrator.is_done():
+        while not orchestrator.are_all_robots_at_home_without_task():
             orchestrator.move_all()
 
 
@@ -135,7 +136,9 @@ def main(num_robots, requests_to_make, DEBUG=False, save_orch_output=False, sim=
 if __name__ == "__main__":
     parser = ArgumentParser(add_help=False)
     parser.add_argument("--num_robots", type=int, default=5)
-    parser.add_argument("--requests_to_make", type=int, default=50)
+
+    # Each robot starts with a job, how many extras do we want to assign the system?
+    parser.add_argument("--requests_to_make", type=int, default=5)
     parser.add_argument("--debug", type=bool, default=False)
     parser.add_argument("--save_orch_output", type=bool, default=False)
     parser.add_argument("--sim", type=bool, default=False)

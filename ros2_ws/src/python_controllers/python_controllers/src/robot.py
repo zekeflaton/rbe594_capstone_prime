@@ -190,22 +190,26 @@ class Robot(object):
             self.battery_charge.charge_battery(BatteryCharge.CHARGE_PER_CYCLE)
         else:
             # Always drain the battery by this amount
-            self.battery_charge.drain_battery(BatteryCharge.DRAIN_PER_CYCLE)
+            if self.battery_charge.drain_battery(BatteryCharge.DRAIN_PER_CYCLE):
+                # print("Robot {} is out of charge".format(self.readable_robot_name))
+                pass
 
-            if self._path:
-                # Since we're going to move, get the next waypoint and drain the battery for the upcoming move cycle
-                # motion planner path uses tuple of floats (x, y, theta). So convert this back to a pose.
-                next_path_pose = self._path.pop(0)
-                next_path_pose = Pose(x=next_path_pose[0], y=next_path_pose[1], yaw=next_path_pose[2])
-                self.battery_charge.drain_battery(BatteryCharge.DRAIN_PER_MOVE)
-            else:
+            if not self._path:
                 path_was_planned = False
+                self.update_current_task()
                 if self.end_pose and self.current_pose != self.end_pose:
                     path_was_planned = self.plan_path()  # returns True if path planned successfully
                 if not path_was_planned:
                     # No path exists and we were not able to plan one, are already at the end pose, or don't have an end pose set
-                    print("Robot ({}) did not move this cycle".format(self.readable_robot_name))
+                    print("Robot {} did not move this cycle".format(self.readable_robot_name))
                     return
+            # Since we're going to move, get the next waypoint and drain the battery for the upcoming move cycle
+            # motion planner path uses tuple of floats (x, y, theta). So convert this back to a pose.
+            next_path_pose = self._path.pop(0)
+            next_path_pose = Pose(x=next_path_pose[0], y=next_path_pose[1], yaw=next_path_pose[2])
+            if self.battery_charge.drain_battery(BatteryCharge.DRAIN_PER_MOVE):
+                # print("Robot {} is out of charge".format(self.readable_robot_name))
+                pass
 
             if not sim:
                 # Set our demo's initial pose
@@ -237,6 +241,9 @@ class Robot(object):
             for observer in self.observers:
                 observer.__call__(self.current_pose)
 
+        self.update_current_task()
+
+    def update_current_task(self):
         # if a task exists, update its status if necessary
         if self._current_task:
             # mark that the robot has reached the shelf
@@ -247,6 +254,7 @@ class Robot(object):
                 self.has_shelf = True
                 self._current_task.has_shelf = True
                 self.end_pose = self._current_task.drop_off_location  # Update end pose to drop off location
+                self.orchestrator.reset_shelf_leg_locks()
             elif self.current_pose == self._current_task.drop_off_location:
                 # TODO Control piston to lower shelf
                 print("Robot {} has completed it's task".format(self.readable_robot_name))
@@ -254,6 +262,7 @@ class Robot(object):
                 self._current_task = None
                 # Update end pose to charge station unless new tasking overwrites this
                 self.end_pose = self.charge_locations[int(self.robot_name)]
+                self.orchestrator.reset_shelf_leg_locks()
 
     def subscribe_to_movement(self, func):
         self.observers.append(func)
