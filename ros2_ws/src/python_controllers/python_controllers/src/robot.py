@@ -92,7 +92,7 @@ class Robot(object):
                 z=self.current_pose.z * 1.,  # convert to a float
                 roll=self.current_pose.roll * 1.,  # convert to a float
                 pitch=self.current_pose.pitch * 1.,  # convert to a float
-                yaw=self.current_pose.z * 1.,  # convert to a float
+                yaw=self.current_pose.yaw * 1.,  # convert to a float
             )
         )
 
@@ -162,14 +162,14 @@ class Robot(object):
         # add forward and backward moves
         movement = 0.5
         cost_multiplier = 1  # Apply a cost modifier if we move onto a shelf node.  Used below.
-        if theta_base == 0:  # this is up
-            coordinates.append([(x_base, y_base + movement, theta_base), cost_multiplier])
-        elif theta_base == 90:  # this is right
+        if theta_base == 0:  # this is right
             coordinates.append([(x_base + movement, y_base, theta_base), cost_multiplier])
-        elif theta_base == 180:  # this is down
-            coordinates.append([(x_base, y_base - movement, theta_base), cost_multiplier])
-        elif theta_base == 270:  # this is left
+        elif theta_base == 90:  # this is up
+            coordinates.append([(x_base, y_base + movement, theta_base), cost_multiplier])
+        elif theta_base == 180:  # this is left
             coordinates.append([(x_base - movement, y_base, theta_base), cost_multiplier])
+        elif theta_base == 270:  # this is down (change to -90 in quaternion function)
+            coordinates.append([(x_base, y_base - movement, theta_base), cost_multiplier])
 
         # correct turns in edge cases
         ccw_turn = theta_base - 90  # 90 degrees

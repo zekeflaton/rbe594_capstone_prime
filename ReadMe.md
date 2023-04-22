@@ -55,3 +55,9 @@ To move the piston up and down, run this command with `0.2` for up and `0.0` for
 ros2 topic pub -1 /piston_vel_cont/commands std_msgs/msg/Float64MultiArray "data:
 > - 0.2"
 ```
+
+To start the orchestrator:
+`python3 src/python_controllers/python_controllers/scripts/run_orchestrator.py --debug=True --num_robots=1`
+
+To start orchestrator in sim with 5 robots:
+`python3 src/python_controllers/python_controllers/scripts/run_orchestrator.py --debug=True --num_robots=5 --sim`
