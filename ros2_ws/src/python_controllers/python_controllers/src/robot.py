@@ -84,8 +84,8 @@ class Robot(object):
         self.sim = sim
         self.joint_piston_controller = JointPistonNode()
 
-        self._nav.set_initial_pose(
-            next_pose_stamped=create_pose_stamped(
+        self._nav.setInitialPose(
+            create_pose_stamped(
                 nav=self._nav,
                 x=self.current_pose.x * 1.,  # convert to a float
                 y=self.current_pose.y * 1.,  # convert to a float
@@ -162,14 +162,14 @@ class Robot(object):
         # add forward and backward moves
         movement = 0.5
         cost_multiplier = 1  # Apply a cost modifier if we move onto a shelf node.  Used below.
-        if theta_base == 0:
-            coordinates.append([(x_base + movement, y_base, theta_base), cost_multiplier])
-        elif theta_base == 90:
+        if theta_base == 0:  # this is up
             coordinates.append([(x_base, y_base + movement, theta_base), cost_multiplier])
-        elif theta_base == 180:
-            coordinates.append([(x_base - movement, y_base, theta_base), cost_multiplier])
-        elif theta_base == 270:
+        elif theta_base == 90:  # this is right
+            coordinates.append([(x_base + movement, y_base, theta_base), cost_multiplier])
+        elif theta_base == 180:  # this is down
             coordinates.append([(x_base, y_base - movement, theta_base), cost_multiplier])
+        elif theta_base == 270:  # this is left
+            coordinates.append([(x_base - movement, y_base, theta_base), cost_multiplier])
 
         # correct turns in edge cases
         ccw_turn = theta_base - 90  # 90 degrees
