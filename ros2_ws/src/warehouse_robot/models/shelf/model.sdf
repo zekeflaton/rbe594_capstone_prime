@@ -3,7 +3,7 @@
   <model name='shelf'>
     <link name='link'>
       <inertial>
-        <mass>8</mass>
+        <mass>10</mass>
         <inertia>
           <ixx>.01</ixx>
           <ixy>0.00</ixy>
@@ -54,10 +54,10 @@
               </ode>
             </torsional>
           </friction>
-          <bounce>
+          <!-- <bounce>
             <restitution_coefficient>1</restitution_coefficient>
             <threshold>1e+06</threshold>
-          </bounce>
+          </bounce> -->
           <contact>
             <collide_without_contact>0</collide_without_contact>
             <collide_without_contact_bitmask>1</collide_without_contact_bitmask>
