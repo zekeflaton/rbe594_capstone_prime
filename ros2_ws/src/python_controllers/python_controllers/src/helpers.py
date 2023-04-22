@@ -249,12 +249,12 @@ def quaternion_from_euler(roll, pitch, yaw):
     :param list(float) quat: (x, y, z, w)
     Bellow should be replaced when porting for ROS 2 Python tf_conversions is done.
     """
-    cy = math.cos(yaw * 0.5)
-    sy = math.sin(yaw * 0.5)
-    cp = math.cos(pitch * 0.5)
-    sp = math.sin(pitch * 0.5)
-    cr = math.cos(roll * 0.5)
-    sr = math.sin(roll * 0.5)
+    cy = math.cos(math.radians(yaw * 0.5))
+    sy = math.sin(math.radians(yaw * 0.5))
+    cp = math.cos(math.radians(pitch * 0.5))
+    sp = math.sin(math.radians(pitch * 0.5))
+    cr = math.cos(math.radians(roll * 0.5))
+    sr = math.sin(math.radians(roll * 0.5))
 
     q = [0] * 4
     # Change ordering because it was w,x,y,z.  so q[3] used to be q[0]
