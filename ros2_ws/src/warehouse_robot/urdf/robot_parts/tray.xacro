@@ -3,18 +3,18 @@
 
 
     <xacro:macro name="tray" params="prefix">
-        <joint name="joint_${prefix}" type="continuous">
+        <joint name="joint_${prefix}" type="fixed">
             <parent link="piston" />
             <child link="${prefix}" />
-            <!-- <dynamics friction="5.0" /> -->
+            <dynamics friction="5.0" />
             <origin rpy="0 0 0" xyz="0 0 0" />
             <axis xyz="0 0 1" />
         </joint>
 
         <gazebo reference="${prefix}">
             <selfCollide>true</selfCollide>
-            <mu1 value="0.1" />
-            <mu2 value="0.1" />
+            <mu value="5" />
+            <mu2 value="5" />
             <kp value="10000000.0" />
             <kd value="10000" />
             <fdir1 value="0 0 0" />
