@@ -92,7 +92,7 @@ class Robot(object):
                 z=self.current_pose.z * 1.,  # convert to a float
                 roll=self.current_pose.roll * 1.,  # convert to a float
                 pitch=self.current_pose.pitch * 1.,  # convert to a float
-                yaw=self.current_pose.yaw * 1.,  # convert to a float
+                yaw=90.,  # convert to a float, hardcode to face up
             )
         )
 
@@ -269,6 +269,7 @@ class Robot(object):
 
                 result = self._nav.getResult()
                 print(result)
+                print(next_pose_stamped)
 
             self.current_pose = next_path_pose
 
