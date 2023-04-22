@@ -256,7 +256,7 @@ class Robot(object):
                     z=next_path_pose.z * 1.,  # convert to a float
                     roll=next_path_pose.roll * 1.,  # convert to a float
                     pitch=next_path_pose.pitch * 1.,  # convert to a float
-                    yaw=next_path_pose.z * 1.,  # convert to a float
+                    yaw=next_path_pose.yaw * 1.,  # convert to a float
                 )
                 # http: // wiki.ros.org / tf2 / Tutorials / Quaternions
                 # https: // answers.unity.com / questions / 147712 / what - is -affected - by - the - w - in -quaternionxyzw.html
