@@ -269,7 +269,8 @@ class Robot(object):
 
                 result = self._nav.getResult()
                 print(result)
-                print(next_pose_stamped)
+                print("next_path_pose: ", next_path_pose)
+                print("next_pose_stamped: ", next_pose_stamped)
 
             self.current_pose = next_path_pose
 
