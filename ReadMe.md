@@ -39,7 +39,7 @@ Run these commands in their own terminals to get the whole system up and running
 Run these from the ros2_ws directory after build & install. You should also have GAZEBO_MODEL_PATH include the models directory so that
 the gazebo map loads correctly
 
-1. ros2 launch warehouse_robot launch_sim.launch.py world:=./src/warehouse_robot/worlds/warehouse_with_apriltag.world use_sim_time:=true
+1. ros2 launch warehouse_robot launch_sim.launch.py world:=./src/warehouse_robot/worlds/warehouse.world use_sim_time:=true
 2. ros2 launch warehouse_robot localization_launch.py map:=./src/warehouse_robot/maps/empty_warehouse2.yaml use_sim_time:=true
 3. ros2 launch warehouse_robot navigation_launch.py use_sim_time:=true map_subscribe_transient_local:=true
 4. rviz2 -d ./src/warehouse_robot/config/main.rviz

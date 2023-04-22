@@ -141,8 +141,8 @@ controller_server:
     general_goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.5
-      yaw_goal_tolerance: 0.5
+      xy_goal_tolerance: 0.05
+      yaw_goal_tolerance: 0.15
     # DWB parameters
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
@@ -310,7 +310,7 @@ smoother_server:
       plugin: "nav2_smoother::SimpleSmoother"
       tolerance: 1.0e-10
       max_its: 1000
-      do_refinement: True
+      do_refinement: False
 
 behavior_server:
   ros__parameters:
