@@ -289,12 +289,12 @@ def create_pose_stamped(nav, x, y, z, roll, pitch, yaw):
     """
 
     :param nav2_simple_commander.robot_navigator.BasicNavigator nav:
-    :param float x:
-    :param float y:
-    :param float z:
-    :param float roll:
-    :param float pitch:
-    :param float yaw:
+    :param float x: coordinates in map frame
+    :param float y: coordinates in map frame
+    :param float z: coordinates in map frame (robot is always 0)
+    :param float roll: degrees
+    :param float pitch: degrees
+    :param float yaw: degrees
 
     :return: nav2_simple_commander.robot_navigator.PoseStamped pose
     """
