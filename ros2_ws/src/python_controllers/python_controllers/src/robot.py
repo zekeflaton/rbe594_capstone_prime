@@ -2,6 +2,7 @@ import math
 import os
 import pickle
 import time
+from IPython import embed
 
 from nav2_simple_commander.robot_navigator import BasicNavigator
 from python_controllers.src.helpers import (
@@ -16,13 +17,32 @@ from python_controllers.src.motion_planners import (
     AStarPlanner
 )
 from python_controllers.src.tag_locations import tags
+from rclpy.node import Node
+from std_msgs.msg import Float64MultiArray
+
+
+class JointPistonNode(Node):
+    def __init__(self):
+        super().__init__("piston_vel_cont")
+        self.piston_joint_publisher_ = self.create_publisher(
+            Float64MultiArray, "piston_vel_cont/commands", 10)
+
+    def publish_piston_up(self):
+        msg = Float64MultiArray()
+        msg.data = [0.2]
+        self.piston_joint_publisher_.publish(msg)
+
+    def publish_piston_down(self):
+        msg = Float64MultiArray()
+        msg.data = [0.0]
+        self.piston_joint_publisher_.publish(msg)
 
 
 class Robot(object):
 
     def __init__(self, robot_name, charge_locations, orchestrator, max_x, max_y, initial_pose,
                  end_pose=None, motion_planner=None, metrics_file_path=None,
-                 tags_filepath="../src/tags_file.pkl", debug=False):
+                 tags_filepath="../src/tags_file.pkl", debug=False, color=None, sim=False):
         """
 
         :param str robot_name: name of the robot
@@ -36,10 +56,13 @@ class Robot(object):
         :param str/None metrics_file_path: Optional file path to save metrics
         :param str tags_filepath: File path where april tag information is saved
         :param bool debug: whether to print debug messages
+        :param tuple(int) color: tuple of RGB values to define the color the robot should use for images outputs
+        :param bool sim: are we controlling gazebo robots or simulating it with images
 
         """
         self._path = []
         self.robot_name = robot_name
+        self.readable_robot_name = str(int(robot_name) + 1)
         self.max_x = max_x
         self.max_y = max_y
         self.current_pose = initial_pose
@@ -58,6 +81,22 @@ class Robot(object):
         self.tags = tags
         self._current_task = None
         self.debug = debug
+        self.color = color
+        self.sim = sim
+        self.joint_piston_controller = JointPistonNode()
+
+        if self.sim:
+            self._nav.setInitialPose(
+                create_pose_stamped(
+                    nav=self._nav,
+                    x=self.current_pose.x * 1.,  # convert to a float
+                    y=self.current_pose.y * 1.,  # convert to a float
+                    z=self.current_pose.z * 1.,  # convert to a float
+                    roll=self.current_pose.roll * 1.,  # convert to a float
+                    pitch=self.current_pose.pitch * 1.,  # convert to a float
+                    yaw=90.,  # convert to a float, hardcode to face up
+                )
+            )
 
     def plan_path(self):
         """
@@ -68,7 +107,7 @@ class Robot(object):
         start_time = time.time()
         parent_dict = {}
         if not self.end_pose:
-            print("No end pose for robot {} so a path could not be planned".format(self.robot_name))
+            print("No end pose for robot {} so a path could not be planned".format(self.readable_robot_name))
             return
         q, list_of_locations = self.motion_planner.initialize(self.current_pose.get_2d_pose(), self.end_pose.get_2d_pose())
         nodes_visited = 0
@@ -125,13 +164,13 @@ class Robot(object):
         # add forward and backward moves
         movement = 0.5
         cost_multiplier = 1  # Apply a cost modifier if we move onto a shelf node.  Used below.
-        if theta_base == 0:
+        if theta_base == 0:  # this is right
             coordinates.append([(x_base + movement, y_base, theta_base), cost_multiplier])
-        elif theta_base == 90:
+        elif theta_base == 90:  # this is up
             coordinates.append([(x_base, y_base + movement, theta_base), cost_multiplier])
-        elif theta_base == 180:
+        elif theta_base == 180:  # this is left
             coordinates.append([(x_base - movement, y_base, theta_base), cost_multiplier])
-        elif theta_base == 270:
+        elif theta_base == 270:  # this is down (change to -90 in quaternion function)
             coordinates.append([(x_base, y_base - movement, theta_base), cost_multiplier])
 
         # correct turns in edge cases
@@ -179,76 +218,92 @@ class Robot(object):
         else:
             return None, None
 
-    def move_robot(self):
+    def move_robot(self, sim):
         # if the robot is at a charge location task, then spend the cycle charging
-        if self.current_pose in self.charge_locations and not self._current_task:
+        if self.current_pose == self.charge_locations[int(self.robot_name)] and not self._current_task:
             if self.debug:
-                print("Robot {} is spending the cycle charging".format(self.robot_name))
+                print("Robot {} is spending the cycle charging".format(self.readable_robot_name))
             self.battery_charge.charge_battery(BatteryCharge.CHARGE_PER_CYCLE)
         else:
             # Always drain the battery by this amount
-            self.battery_charge.drain_battery(BatteryCharge.DRAIN_PER_CYCLE)
+            if self.battery_charge.drain_battery(BatteryCharge.DRAIN_PER_CYCLE):
+                print("Robot {} is out of charge".format(self.readable_robot_name))
+                # embed()
+                # pass
 
-            if self._path:
-                # Since we're going to move, get the next waypoint and drain the battery for the upcoming move cycle
-                # motion planner path uses tuple of floats (x, y, theta). So convert this back to a pose.
-                next_path_pose = self._path.pop(0)
-                next_path_pose = Pose(x=next_path_pose[0], y=next_path_pose[1], yaw=next_path_pose[2])
-                self.battery_charge.drain_battery(BatteryCharge.DRAIN_PER_MOVE)
-            else:
+            if not self._path:
                 path_was_planned = False
+                self.update_current_task()
                 if self.end_pose and self.current_pose != self.end_pose:
                     path_was_planned = self.plan_path()  # returns True if path planned successfully
                 if not path_was_planned:
                     # No path exists and we were not able to plan one, are already at the end pose, or don't have an end pose set
-                    print("Robot ({}) did not move this cycle".format(self.robot_name))
+                    print("Robot {} did not move this cycle".format(self.readable_robot_name))
                     return
+            # Since we're going to move, get the next waypoint and drain the battery for the upcoming move cycle
+            # motion planner path uses tuple of floats (x, y, theta). So convert this back to a pose.
+            next_path_pose = self._path.pop(0)
+            next_path_pose = Pose(x=next_path_pose[0], y=next_path_pose[1], yaw=next_path_pose[2])
+            if self.battery_charge.drain_battery(BatteryCharge.DRAIN_PER_MOVE):
+                # print("Robot {} is out of charge".format(self.readable_robot_name))
+                pass
 
-            # Set our demo's initial pose
-            # http://docs.ros.org/en/noetic/api/geometry_msgs/html/msg/PoseStamped.html
-            next_pose_stamped = create_pose_stamped(
-                nav=self._nav,
-                x=next_path_pose.x * 1.,  # convert to a float
-                y=next_path_pose.y * 1.,  # convert to a float
-                z=next_path_pose.z * 1.,  # convert to a float
-                roll=next_path_pose.roll * 1.,  # convert to a float
-                pitch=next_path_pose.pitch * 1.,  # convert to a float
-                yaw=next_path_pose.z * 1.,  # convert to a float
-            )
-            # http: // wiki.ros.org / tf2 / Tutorials / Quaternions
-            # https: // answers.unity.com / questions / 147712 / what - is -affected - by - the - w - in -quaternionxyzw.html
-            # https://www.programcreek.com/python/example/70252/geometry_msgs.msg.PoseStamped
-            self._nav.followWaypoints([next_pose_stamped])
-            while not self._nav.isTaskComplete():
-                feedback = self._nav.getFeedback()
-                print(feedback)
-                # if feedback.navigation_duration > 600:
-                #     self._nav.cancelTask()
+            if not sim:
+                # Set our demo's initial pose
+                # http://docs.ros.org/en/noetic/api/geometry_msgs/html/msg/PoseStamped.html
+                next_pose_stamped = create_pose_stamped(
+                    nav=self._nav,
+                    x=next_path_pose.x * 1.,  # convert to a float
+                    y=next_path_pose.y * 1.,  # convert to a float
+                    z=next_path_pose.z * 1.,  # convert to a float
+                    roll=next_path_pose.roll * 1.,  # convert to a float
+                    pitch=next_path_pose.pitch * 1.,  # convert to a float
+                    yaw=next_path_pose.yaw * 1.,  # convert to a float
+                )
+                # http: // wiki.ros.org / tf2 / Tutorials / Quaternions
+                # https: // answers.unity.com / questions / 147712 / what - is -affected - by - the - w - in -quaternionxyzw.html
+                # https://www.programcreek.com/python/example/70252/geometry_msgs.msg.PoseStamped
+                self._nav.goToPose(next_pose_stamped)
+                while not self._nav.isTaskComplete():
+                    feedback = self._nav.getFeedback()
+                    print(feedback)
+                    # if feedback.navigation_duration > 600:
+                    #     self._nav.cancelTask()
 
-            result = self._nav.getResult()
+                result = self._nav.getResult()
+                print(result)
+                print("next_path_pose: ", next_path_pose)
+                print("next_pose_stamped: ", next_pose_stamped)
+
             self.current_pose = next_path_pose
-            print(result)
 
             for observer in self.observers:
                 observer.__call__(self.current_pose)
 
+        self.update_current_task()
+
+    def update_current_task(self):
         # if a task exists, update its status if necessary
         if self._current_task:
             # mark that the robot has reached the shelf
             if self.current_pose == self._current_task.pick_up_location:
-                # TODO Control piston to lift shelf
-                print("Robot {} has picked up the shelf".format(self.robot_name))
+                if not self.sim:
+                    self.joint_piston_controller.publish_piston_up()
+                print("Robot {} has picked up the shelf".format(self.readable_robot_name))
                 self.orchestrator.shelves[self._current_task.shelf_name] = None
                 self.has_shelf = True
                 self._current_task.has_shelf = True
                 self.end_pose = self._current_task.drop_off_location  # Update end pose to drop off location
+                self.orchestrator.reset_shelf_leg_locks()
             elif self.current_pose == self._current_task.drop_off_location:
-                # TODO Control piston to lower shelf
-                print("Robot {} has completed it's task".format(self.robot_name))
+                if not self.sim:
+                    self.joint_piston_controller.publish_piston_down()
+                print("Robot {} has completed it's task".format(self.readable_robot_name))
                 self.orchestrator.shelves[self._current_task.shelf_name] = self.current_pose.get_6d_pose()
                 self._current_task = None
                 # Update end pose to charge station unless new tasking overwrites this
                 self.end_pose = self.charge_locations[int(self.robot_name)]
+                self.orchestrator.reset_shelf_leg_locks()
 
     def subscribe_to_movement(self, func):
         self.observers.append(func)

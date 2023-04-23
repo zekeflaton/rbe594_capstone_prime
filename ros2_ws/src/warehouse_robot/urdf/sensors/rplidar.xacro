@@ -42,7 +42,7 @@
                 </horizontal>
             </scan>
             <range>
-                <min>0.1</min>
+                <min>0.8</min>
                 <max>12</max>
             </range>
         </ray>

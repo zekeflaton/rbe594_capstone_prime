@@ -19,7 +19,7 @@
         <geometry>
           <mesh>
             <uri>model://shelf/meshes/shelf.dae</uri>
-            <scale>1 1 1</scale>
+            <scale>1.15 1.15 1</scale>
           </mesh>
         </geometry>
         <transparency>0</transparency>
@@ -32,7 +32,7 @@
         <geometry>
           <mesh>
             <uri>model://shelf/meshes/shelf.dae</uri>
-            <scale>1 1 1</scale>
+            <scale>1.15 1.15 1</scale>
           </mesh>
         </geometry>
         <surface>
