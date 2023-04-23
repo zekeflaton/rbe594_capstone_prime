@@ -1,7 +1,11 @@
+import os
 import math
 import pickle
 import numpy as np
 from nav2_simple_commander.robot_navigator import PoseStamped
+
+
+time_format = "%Y_%m_%dT%H_%M_%S"
 
 
 class RobotTask(object):
@@ -19,7 +23,7 @@ class RobotTask(object):
         self.complete = False
 
     def __repr__(self):
-        return "python_controllers.src.helpers.RobotTask:\n\tpick_up_location: {}\n\tdrop_off_location: {}\n\thas_shelf: {}\n\tcomplete: {}\n".format(self.pick_up_location, self.drop_off_location, self.has_shelf, self.complete)
+        return "python_controllers.src.helpers.RobotTask:\n\tshelf_name: {}\tpick_up_location: {}\n\tdrop_off_location: {}\n\thas_shelf: {}\n\tcomplete: {}\n".format(self.shelf_name, self.pick_up_location, self.drop_off_location, self.has_shelf, self.complete)
 
 
 class Pose(object):
@@ -100,8 +104,8 @@ class Pose(object):
 class BatteryCharge(object):
     MIN_CHARGE = 0.0
     MAX_CHARGE = 100.0
-    DRAIN_PER_MOVE = 2.0
-    DRAIN_PER_CYCLE = 0.5
+    DRAIN_PER_MOVE = 0.5
+    DRAIN_PER_CYCLE = 0.1
     CHARGE_PER_CYCLE = 20.0
 
     def __init__(self, initial_charge=None):
@@ -123,12 +127,15 @@ class BatteryCharge(object):
         Drain battery charge by specific amount
 
         :param float drain_amount: amount to drain battery
+        :return bool battery_out_of_charge: is the battery out of charge
         """
+        battery_out_of_charge = False
         if not drain_amount:
             drain_amount = self.DRAIN_PER_MOVE
         if self.battery_charge - drain_amount < 0:
-            print("Robot ran out of juice....oops!")
+            battery_out_of_charge = True
         self.battery_charge = self.bound_value_by_min_and_max(self.battery_charge - drain_amount)
+        return battery_out_of_charge
 
     def charge_battery(self, charge_amount=None):
         """
@@ -240,12 +247,20 @@ def quaternion_from_euler(roll, pitch, yaw):
     Converts euler roll, pitch, yaw to quaternion (w in last place)
     https://gist.github.com/salmagro/2e698ad4fbf9dae40244769c5ab74434
 
-    :param float roll:
-    :param float pitch:
-    :param float yaw:
+    :param float roll: degrees
+    :param float pitch: degrees
+    :param float yaw: degrees
     :param list(float) quat: (x, y, z, w)
     Bellow should be replaced when porting for ROS 2 Python tf_conversions is done.
     """
+    if yaw == 270:
+        yaw = -90
+
+    # Convert to radians before getting values for quaternion calculations
+    roll = math.radians(roll)
+    pitch = math.radians(pitch)
+    yaw = math.radians(yaw)
+
     cy = math.cos(yaw * 0.5)
     sy = math.sin(yaw * 0.5)
     cp = math.cos(pitch * 0.5)
@@ -278,12 +293,12 @@ def create_pose_stamped(nav, x, y, z, roll, pitch, yaw):
     """
 
     :param nav2_simple_commander.robot_navigator.BasicNavigator nav:
-    :param float x:
-    :param float y:
-    :param float z:
-    :param float roll:
-    :param float pitch:
-    :param float yaw:
+    :param float x: coordinates in map frame
+    :param float y: coordinates in map frame
+    :param float z: coordinates in map frame (robot is always 0)
+    :param float roll: degrees
+    :param float pitch: degrees
+    :param float yaw: degrees
 
     :return: nav2_simple_commander.robot_navigator.PoseStamped pose
     """
@@ -293,7 +308,7 @@ def create_pose_stamped(nav, x, y, z, roll, pitch, yaw):
     pose_stamped.pose.position.x = x
     pose_stamped.pose.position.y = y
     pose_stamped.pose.position.z = z
-    quaternion = quaternion_from_euler(math.radians(roll), math.radians(pitch), math.radians(yaw))
+    quaternion = quaternion_from_euler(roll, pitch, yaw)
     pose_stamped.pose.orientation.x = quaternion[0]
     pose_stamped.pose.orientation.y = quaternion[1]
     pose_stamped.pose.orientation.z = quaternion[2]
@@ -342,3 +357,10 @@ def pose_of_tag(tags, tag_name):
         yaw=tag_data[5],
     )
     return tag_pose
+
+
+def ensure_filepath_exists(filepath):
+    if not os.path.exists(filepath):
+        # Create a new directory because it does not exist
+        os.makedirs(filepath)
+        print("The new directory ({}) is created!".format(filepath))
