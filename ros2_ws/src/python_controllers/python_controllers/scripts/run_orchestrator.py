@@ -11,7 +11,8 @@ from python_controllers.src.orchestrator import (
 from python_controllers.src.helpers import (
     pose_of_tag,
     Pose,
-    RobotTask
+    RobotTask,
+    create_pose_stamped
 )
 from python_controllers.src.shelf_locations import shelves
 from python_controllers.src.tag_locations import tags
@@ -76,7 +77,7 @@ def main(num_robots, requests_to_make, DEBUG=False, ACTUAL_PATH_DIR=None):
                    "4:\n"
                    "orchestrator.robots[0].move_robot()\n"
         )
-        file_path = os.path.join(orchestrator.actual_path_dir, r.robot_name, '.csv')
+        file_path = os.path.join(orchestrator.actual_path_dir, str(r.robot_name) + '.csv')
         df = pd.DataFrame(r.actual_path)
         df.to_csv(file_path)
     else:
@@ -95,3 +96,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(num_robots=args.num_robots, requests_to_make=args.requests_to_make, DEBUG=args.debug, ACTUAL_PATH_DIR=args.actual_path_dir)
+
+
+# r._path = [(0., -3., 90), (0., 3., 90), (0., 3., 270), (0., -3., 270)]
