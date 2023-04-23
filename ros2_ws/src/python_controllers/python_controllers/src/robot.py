@@ -2,6 +2,7 @@ import math
 import os
 import pickle
 import time
+from IPython import embed
 
 from nav2_simple_commander.robot_navigator import BasicNavigator
 from python_controllers.src.helpers import (
@@ -226,8 +227,9 @@ class Robot(object):
         else:
             # Always drain the battery by this amount
             if self.battery_charge.drain_battery(BatteryCharge.DRAIN_PER_CYCLE):
-                # print("Robot {} is out of charge".format(self.readable_robot_name))
-                pass
+                print("Robot {} is out of charge".format(self.readable_robot_name))
+                # embed()
+                # pass
 
             if not self._path:
                 path_was_planned = False

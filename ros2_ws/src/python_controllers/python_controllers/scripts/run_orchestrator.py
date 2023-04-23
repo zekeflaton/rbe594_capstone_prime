@@ -11,7 +11,9 @@ from python_controllers.src.orchestrator import (
 from python_controllers.src.helpers import (
     pose_of_tag,
     Pose,
-    RobotTask
+    RobotTask,
+    ensure_filepath_exists,
+    time_format
 )
 from python_controllers.src.shelf_locations import shelves
 from python_controllers.src.tag_locations import tags
@@ -35,7 +37,8 @@ def main(num_robots, requests_to_make, DEBUG=False, save_orch_output=False, sim=
         pose_of_tag(tags, "tag271"),
     ]
 
-    orch_output_filepath = "results//{}".format(datetime.now().isoformat())
+    orch_output_filepath = "results"
+    warehouse_png_output_filepath = os.path.join(orch_output_filepath, format(datetime.now().strftime(time_format)))
     orchestrator = Orchestrator(
         shelves=shelves,
         charge_locations=charge_locations,
@@ -44,6 +47,7 @@ def main(num_robots, requests_to_make, DEBUG=False, save_orch_output=False, sim=
         shelf_color=(0, 0, 0),  # black
         charge_location_color=(0, 255, 0),  # green
         sim=sim,
+        warehouse_png_output_filepath=warehouse_png_output_filepath,
         orch_output_filepath=orch_output_filepath,
         extra_random_requests_to_make=requests_to_make,
     )
@@ -81,7 +85,7 @@ def main(num_robots, requests_to_make, DEBUG=False, save_orch_output=False, sim=
             r5 = o.robots["4"]
         shelf_tasks = ["A4", "D6", "C2", "B6", "D1"]
         # -4, -4 to 5, 3
-        drop_off_locations = [(-3, -4), (-3, -3), (0, 0), (3, 3), (0, 1)]
+        drop_off_locations = [(-4, -4), (-3, -3), (0, 0), (3, 3), (0, 1)]
         for i, r in orchestrator.robots.items():
             task = RobotTask(
                 shelf_name=shelf_tasks[int(i)],
@@ -90,11 +94,24 @@ def main(num_robots, requests_to_make, DEBUG=False, save_orch_output=False, sim=
             )
             orchestrator.make_request(task)
 
+        start_time = datetime.now()
         for i, r in orchestrator.robots.items():
             print("Robot name: ", r.robot_name)
             print("Robot color: ", r.color)
 
             r.plan_path()
+        end_time = datetime.now()
+        total_plan_time = end_time - start_time
+        robots_planned = len(o.robots)
+        planned_path_time_filepath = os.path.join(orch_output_filepath, "planned_path_time.csv")
+        ensure_filepath_exists(orch_output_filepath)
+        need_for_header = True
+        if os.path.isfile(planned_path_time_filepath):
+            need_for_header = False
+        with open(planned_path_time_filepath, "a") as f:
+            if need_for_header:
+                f.write("robots_planned,total_plan_time\n")
+            f.write(",".join([str(robots_planned), str(total_plan_time)])+"\n")
 
         o.save_current_state_to_image()
 
@@ -113,6 +130,18 @@ def main(num_robots, requests_to_make, DEBUG=False, save_orch_output=False, sim=
                    "6: \n"
                    "while not o.are_all_robots_at_home_without_task(): o.move_all()"
         )
+
+        requests_vs_cycle = os.path.join(orch_output_filepath, "requests_vs_cycle.csv")
+        ensure_filepath_exists(orch_output_filepath)
+        need_for_header = True
+        if os.path.isfile(requests_vs_cycle):
+            need_for_header = False
+        with open(requests_vs_cycle, "a") as f:
+            if need_for_header:
+                f.write("requests,cycles\n")
+            # Write the move cycle total + 1 task for eac
+            f.write(",".join([str(requests_to_make+num_robots), str(o.move_cycle)])+"\n")
+
     else:
         # loop until all robots are done
         while not orchestrator.are_all_robots_at_home_without_task():
@@ -121,13 +150,13 @@ def main(num_robots, requests_to_make, DEBUG=False, save_orch_output=False, sim=
 
     # Create the frames
     frames = []
-    imgs = sorted(glob.glob(os.path.join(orch_output_filepath, "*.png")))
+    imgs = sorted(glob.glob(os.path.join(warehouse_png_output_filepath, "*.png")))
     for i in imgs:
         new_frame = im.open(i)
         frames.append(new_frame)
 
     # Save into a GIF file that loops forever
-    frames[0].save(os.path.join(orch_output_filepath, 'png_to_gif.gif'), format='GIF',
+    frames[0].save(os.path.join(warehouse_png_output_filepath, 'png_to_gif.gif'), format='GIF',
                    append_images=frames[1:],
                    save_all=True,
                    duration=300, loop=1)

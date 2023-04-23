@@ -1,7 +1,11 @@
+import os
 import math
 import pickle
 import numpy as np
 from nav2_simple_commander.robot_navigator import PoseStamped
+
+
+time_format = "%Y_%m_%dT%H_%M_%S"
 
 
 class RobotTask(object):
@@ -353,3 +357,10 @@ def pose_of_tag(tags, tag_name):
         yaw=tag_data[5],
     )
     return tag_pose
+
+
+def ensure_filepath_exists(filepath):
+    if not os.path.exists(filepath):
+        # Create a new directory because it does not exist
+        os.makedirs(filepath)
+        print("The new directory ({}) is created!".format(filepath))

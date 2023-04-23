@@ -2,16 +2,19 @@ import os
 from PIL import Image as im
 import numpy as np
 import random
+from datetime import datetime
+from IPython import embed
 
 import rclpy
 from python_controllers.src.robot import Robot
 from python_controllers.src.helpers import (
     BatteryCharge,
     Pose,
-    RobotTask
+    RobotTask,
+    ensure_filepath_exists,
+    time_format
 )
 from python_controllers.src.tag_locations import tags
-
 
 
 class Orchestrator(object):
@@ -24,6 +27,7 @@ class Orchestrator(object):
                  motion_planner=None,
                  metrics_file_path=None,
                  debug=False,
+                 warehouse_png_output_filepath=None,
                  orch_output_filepath=None,
                  sim=False,
                  extra_random_requests_to_make=0
@@ -39,7 +43,8 @@ class Orchestrator(object):
         :param BaseMotionPlanner | None motion_planner: Optional override for a motion planner class
         :param str | None metrics_file_path: Optional file path to save metrics
         :param bool debug: whether to print debug messages
-        :param str | None orch_output_filepath: filepath of where to save the images
+        :param str | None warehouse_png_output_filepath: filepath of where to save the images
+        :param str | None orch_output_filepath: filepath of where to save other results
         :param bool sim: are we controlling gazebo robots or simulating it with images
         :param int extra_random_requests_to_make: How many extra requests to autogenerate once current tasks are done
         """
@@ -53,7 +58,14 @@ class Orchestrator(object):
         self.deadlock_count = 0
         self.charge_locations = charge_locations
         self.request_queue = []
+        self.warehouse_png_output_filepath = warehouse_png_output_filepath
         self.orch_output_filepath = orch_output_filepath
+
+        if self.orch_output_filepath:
+            self.battery_life_filepath = os.path.join(self.orch_output_filepath, "battery_levels_by_cycle_{}.csv".format(datetime.now().strftime(time_format)))
+            ensure_filepath_exists(self.orch_output_filepath)
+            self.write_data_to_battery_life_cycle_file(header=True)
+
         self.extra_random_requests = extra_random_requests_to_make
 
         # this set holds the ids of robots
@@ -62,7 +74,7 @@ class Orchestrator(object):
         self.waiting_robots = set()
         self.motion_planner = motion_planner
         self.metrics_file_path = metrics_file_path
-        self.battery_estimate_buffer = 0.2
+        self.battery_estimate_buffer = 5.
         self.debug = debug
         self.sim = sim
 
@@ -72,7 +84,7 @@ class Orchestrator(object):
 
         rclpy.init()
 
-        if orch_output_filepath:
+        if warehouse_png_output_filepath:
             # variables needed for numpy image building
             self.shelf_color = shelf_color
             self.charge_location_color = charge_location_color
@@ -95,10 +107,16 @@ class Orchestrator(object):
             self.move_cycle = 0
 
             # Make the results directory if it does not exist
-            if not os.path.exists(self.orch_output_filepath):
-                # Create a new directory because it does not exist
-                os.makedirs(self.orch_output_filepath)
-                print("The new directory is created!")
+            ensure_filepath_exists(self.warehouse_png_output_filepath)
+
+    def write_data_to_battery_life_cycle_file(self, header=False):
+        if self.battery_life_filepath:
+            with open(self.battery_life_filepath, "a") as f:
+                if header:
+                    f.write("Cycle,Robot1,Robot2,Robot3,Robot4,Robot5\n")
+                else:
+                    battery_levels = [str(r.battery_charge.battery_charge) for rname, r in self.robots.items()]
+                    f.write(",".join([str(self.move_cycle)] + battery_levels)+"\n")
 
     def convert_x_to_img_x(self, x):
         return int((x + self.x_offset) * self.image_buffer)
@@ -169,7 +187,7 @@ class Orchestrator(object):
         warehouse_map_png_resized = warehouse_map_png.resize((600, 600), im.NEAREST)
         warehouse_map_png_resized_rotated = warehouse_map_png_resized.rotate(90)  # origin is bottom left for warehouse map and top left for images.
 
-        warehouse_map_png_resized_rotated.save(os.path.join(self.orch_output_filepath, 'warehouse_map_{}.png'.format(str(self.move_cycle).zfill(5))))
+        warehouse_map_png_resized_rotated.save(os.path.join(self.warehouse_png_output_filepath, 'warehouse_map_{}.png'.format(str(self.move_cycle).zfill(5))))
 
     def reset_shelf_leg_locks(self):
         """
@@ -177,31 +195,32 @@ class Orchestrator(object):
         :param shelf_name:
         :return:
         """
-        # TODO: Can make this more dynamic such that we simply remove shelf points as long as another shelf doesnt have the same leg spot.
-        for x, y in self.locked_shelves.copy():
-            robot_locked_point = False
-            for id, robot in self.robots.items():
-                if (x, y) in robot.locked_cells:
-                    robot_locked_point = True
-            if not robot_locked_point:
-                self.locked.remove((x, y))
-            self.locked_shelves.remove((x, y))
-        if self.locked_shelves:
-            print("ERROR: reset_shelf_leg_locks")
-            raise
-        for shelf_name, shelf_pose in self.shelves.items():
-            # print("shelf_name: ", shelf_name, " -- shelf_pose: ", shelf_pose)
-            if shelf_pose:
-                for x_adjust in [-0.5, 0.5]:
-                    for y_adjust in [-0.5, 0.5]:
-                        x, y, z, roll, pitch, yaw = shelf_pose
-                        point_surrounding_shelf_pose = Pose(x+x_adjust, y+y_adjust, 0, 0, 0, 0)
-                        # print("point_surrounding_shelf_pose.get_6d_pose(): ", point_surrounding_shelf_pose.get_6d_pose())
-                        # print("self.tags.values(): ", self.tags.values())
-                        if point_surrounding_shelf_pose.get_6d_pose() in self.tags.values():
-                            # print(point_surrounding_shelf_pose.get_xy())
-                            self.locked_shelves.add(point_surrounding_shelf_pose.get_xy())
-                            self.locked.add(point_surrounding_shelf_pose.get_xy())
+        if not self.sim:
+            # TODO: Can make this more dynamic such that we simply remove shelf points as long as another shelf doesnt have the same leg spot.
+            for x, y in self.locked_shelves.copy():
+                robot_locked_point = False
+                for id, robot in self.robots.items():
+                    if (x, y) in robot.locked_cells:
+                        robot_locked_point = True
+                if not robot_locked_point:
+                    self.locked.remove((x, y))
+                self.locked_shelves.remove((x, y))
+            if self.locked_shelves:
+                print("ERROR: reset_shelf_leg_locks")
+                raise
+            for shelf_name, shelf_pose in self.shelves.items():
+                # print("shelf_name: ", shelf_name, " -- shelf_pose: ", shelf_pose)
+                if shelf_pose:
+                    for x_adjust in [-0.5, 0.5]:
+                        for y_adjust in [-0.5, 0.5]:
+                            x, y, z, roll, pitch, yaw = shelf_pose
+                            point_surrounding_shelf_pose = Pose(x+x_adjust, y+y_adjust, 0, 0, 0, 0)
+                            # print("point_surrounding_shelf_pose.get_6d_pose(): ", point_surrounding_shelf_pose.get_6d_pose())
+                            # print("self.tags.values(): ", self.tags.values())
+                            if point_surrounding_shelf_pose.get_6d_pose() in self.tags.values():
+                                # print(point_surrounding_shelf_pose.get_xy())
+                                self.locked_shelves.add(point_surrounding_shelf_pose.get_xy())
+                                self.locked.add(point_surrounding_shelf_pose.get_xy())
 
     def add_robot(self, robot_name, initial_pose, end_pose=None, color=None):
         """
@@ -311,11 +330,10 @@ class Orchestrator(object):
                     )
                     self.make_request(task)
                 else:
-                    next_request = self.request_queue.pop(0)
-                    print(f'Requests left: {len(self.request_queue)}')
-                    robot.assign_new_task(next_request)
+                    self.assign_tasks_for_robots()
 
-        if self.orch_output_filepath:
+        self.write_data_to_battery_life_cycle_file()
+        if self.warehouse_png_output_filepath:
             self.save_current_state_to_image(1)
 
     def remove_points_around_shelves(self, shelf_pose, points_list):
@@ -404,16 +422,24 @@ class Orchestrator(object):
                 continue
             # Get the manhattan distance of the robots currnet pose to the first task plus the tasks pick up point plus
             # the distance of the tasks pick up point to the drop off point.
-            distance_to_cover = Pose.manhattan_distance(robot.current_pose, task.pick_up_location) + Pose.manhattan_distance(task.pick_up_location, task.drop_off_location)
+            distance_to_cover = Pose.manhattan_distance(robot.current_pose, task.pick_up_location) + \
+                                Pose.manhattan_distance(task.pick_up_location, task.drop_off_location) + \
+                                Pose.manhattan_distance(task.drop_off_location, self.charge_locations[int(robot.robot_name)])
 
             # Estimate battery usage with a buffer for unexpected obstacles or deadlocks
-            battery_usage_estimate = (BatteryCharge.DRAIN_PER_CYCLE + BatteryCharge.DRAIN_PER_MOVE) * distance_to_cover * (1 + self.battery_estimate_buffer)
+            battery_usage_estimate = (BatteryCharge.DRAIN_PER_CYCLE + BatteryCharge.DRAIN_PER_MOVE) * distance_to_cover * (self.battery_estimate_buffer)
+            # print("battery_usage_estimate", battery_usage_estimate)
             # if self.debug: print("battery_usage_estimate", battery_usage_estimate)
             # if self.debug: print("robot.battery_charge.battery_charge", robot.battery_charge.battery_charge)
             # Only consider the robot if it has enough battery to get to its destination
             if robot.battery_charge.battery_charge >= battery_usage_estimate:
                 # If we do not have a robot set or this robot is closer to the pick up point, then select this as the best option
                 if not robot_to_use or distance_to_cover < best_robot_distance_to_cover:
+                    # print("\trobot selected: ",  robot.readable_robot_name)
+                    # print("\trobot charge left: ",  robot.battery_charge.battery_charge)
+                    # print("\tbattery_usage_estimate: ", battery_usage_estimate)
+                    # print("\tdistance_to_cover: ", distance_to_cover)
+                    # print("\ttask: ", task)
                     robot_to_use = robot
                     best_robot_distance_to_cover = distance_to_cover
         # if self.debug: print("robot_to_use", robot_to_use)
@@ -428,10 +454,19 @@ class Orchestrator(object):
             for i in range(min(len(self.robots), len(self.request_queue))):
                 # Check to see if any robots are available for tasking and assign tasks off the request queue
                 robot_for_tasking = self.find_robot_for_task(self.request_queue[0])
+                # for rn, r in self.robots.items():
+                #     print(r.readable_robot_name)
+                #     print(r.battery_charge.battery_charge)
+                #     print(bool(r._current_task))
+                # print("robot for tasking", robot_for_tasking.readable_robot_name)
+                # embed()
                 if robot_for_tasking:
                     robot_for_tasking.assign_new_task(self.request_queue.pop(0))
+                    print(f'\tRequests left: {len(self.request_queue) + self.extra_random_requests}')
                 else:
                     # If no robots are available for tasking, break out of this loop
                     # if self.debug: print("end assign_tasks_for_robots")
                     break
+
         # if self.debug: print("end assign_tasks_for_robots")
+
