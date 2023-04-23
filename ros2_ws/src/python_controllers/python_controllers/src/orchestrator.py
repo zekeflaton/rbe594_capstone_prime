@@ -152,7 +152,13 @@ class Orchestrator(object):
             # if enabled, save the actual path to a csv file
             if robot.is_done() and self.actual_path_dir is not None:
                 df = pd.DataFrame(robot.actual_path)
-                df.to_csv(os.path.join(self.actual_path_dir, id, '.csv'))
+                file_path = os.path.join(self.actual_path_dir, id, '.csv')
+                if os.path.exists(file_path):
+                    df.to_csv(file_path, mode='a', header=False)
+                else:
+                    df.to_csv(file_path)
+                for col in robot.actual_path:
+                    robot.actual_path[col].clear()
 
             if robot.is_done() and self.request_queue:
                 next_request = self.request_queue.pop(0)
