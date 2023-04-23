@@ -1,6 +1,8 @@
 from argparse import ArgumentParser
+import os
 
 import pickle
+import pandas as pd
 from IPython import embed
 
 from python_controllers.src.orchestrator import (
@@ -74,6 +76,9 @@ def main(num_robots, requests_to_make, DEBUG=False, ACTUAL_PATH_DIR=None):
                    "4:\n"
                    "orchestrator.robots[0].move_robot()\n"
         )
+        file_path = os.path.join(orchestrator.actual_path_dir, r.robot_name, '.csv')
+        df = pd.DataFrame(r.actual_path)
+        df.to_csv(file_path)
     else:
         # loop until all robots are done
         while not orchestrator.is_done():
