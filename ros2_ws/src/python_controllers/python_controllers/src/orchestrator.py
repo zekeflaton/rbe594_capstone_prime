@@ -1,15 +1,17 @@
 import rclpy
+import os
 from python_controllers.src.robot import Robot
 from python_controllers.src.helpers import (
     BatteryCharge,
     Pose
 )
 from python_controllers.src.tag_locations import tags
+import pandas as pd
 
 
 
 class Orchestrator(object):
-    def __init__(self, shelves, charge_locations, size, motion_planner=None, metrics_file_path=None, debug=False):
+    def __init__(self, shelves, charge_locations, size, motion_planner=None, metrics_file_path=None, debug=False, actual_path_dir=None):
         """
         Initialize the orchestrator
 
@@ -43,6 +45,12 @@ class Orchestrator(object):
         # Lock the 4 corners around the shelves to prevent the motion planners from using those points where the legs sit
         self.locked_shelves = set()  # Tuple(x, y) of all locked shelf locations
         self.reset_shelf_leg_locks()
+
+        # save the actual robot paths to a directory
+        if os.path.exists(actual_path_dir):
+            self.actual_path_dir = actual_path_dir
+        else:
+            self.actual_path_dir = None
 
         rclpy.init()
 
@@ -93,6 +101,7 @@ class Orchestrator(object):
             motion_planner=self.motion_planner,
             metrics_file_path=self.metrics_file_path,
             debug=self.debug,
+            save_path_enabled=self.actual_path_dir is not None
         )
         self.waiting_robots.add(robot_name)
         return self.robots[robot_name]
@@ -139,6 +148,11 @@ class Orchestrator(object):
             # Once an available path has been found, reserve the first and second pts for this robot
             self.lock_cells(robot, first, second)
             robot.move_robot()
+
+            # if enabled, save the actual path to a csv file
+            if robot.is_done() and self.actual_path_dir is not None:
+                df = pd.DataFrame(robot.actual_path)
+                df.to_csv(os.path.join(self.actual_path_dir, id, '.csv'))
 
             if robot.is_done() and self.request_queue:
                 next_request = self.request_queue.pop(0)

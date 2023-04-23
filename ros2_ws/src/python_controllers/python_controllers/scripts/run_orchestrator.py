@@ -15,7 +15,7 @@ from python_controllers.src.shelf_locations import shelves
 from python_controllers.src.tag_locations import tags
 
 
-def main(num_robots, requests_to_make, DEBUG=False):
+def main(num_robots, requests_to_make, DEBUG=False, ACTUAL_PATH_DIR=None):
     """
 
     :param bool DEBUG: Are we in debug mode?  Start an embeded shell, otherwise just run
@@ -36,6 +36,7 @@ def main(num_robots, requests_to_make, DEBUG=False):
         charge_locations=charge_locations,
         size=(9, 7),
         debug=DEBUG,
+        actual_path_dir=ACTUAL_PATH_DIR
     )
 
     if num_robots > len(charge_locations):
@@ -84,7 +85,8 @@ if __name__ == "__main__":
     parser.add_argument("--num_robots", type=int, default=5)
     parser.add_argument("--requests_to_make", type=int, default=50)
     parser.add_argument("--debug", type=bool, default=False)
+    parser.add_argument("--actual_path_dir", type=str, default=None)
 
     args = parser.parse_args()
 
-    main(num_robots=args.num_robots, requests_to_make=args.requests_to_make, DEBUG=args.debug)
+    main(num_robots=args.num_robots, requests_to_make=args.requests_to_make, DEBUG=args.debug, ACTUAL_PATH_DIR=args.actual_path_dir)
