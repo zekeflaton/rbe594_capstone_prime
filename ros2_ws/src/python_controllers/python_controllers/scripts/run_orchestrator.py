@@ -83,9 +83,11 @@ def main(num_robots, requests_to_make, DEBUG=False, save_orch_output=False, sim=
             r4 = o.robots["3"]
         if "4" in o.robots:
             r5 = o.robots["4"]
-        shelf_tasks = ["A4", "D6", "C2", "B6", "D1"]
+        # shelf_tasks = ["A4", "D6", "C2", "B6", "D1"]
+        shelf_tasks = ["A4"]
         # -4, -4 to 5, 3
-        drop_off_locations = [(-4, -4), (-3, -3), (0, 0), (3, 3), (0, 1)]
+        # drop_off_locations = [(-3, -3), (-1, -3), (0, 0), (3, 3), (0, 1)]
+        drop_off_locations = [(-3, -3)]
         for i, r in orchestrator.robots.items():
             task = RobotTask(
                 shelf_name=shelf_tasks[int(i)],

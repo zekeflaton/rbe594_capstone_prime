@@ -3,7 +3,8 @@
   <model name='shelf'>
     <link name='link'>
       <inertial>
-        <mass>10</mass>
+        <pose>0.0 0.0 -0.5 0 0 0</pose>
+        <mass>20</mass>
         <inertia>
           <ixx>.01</ixx>
           <ixy>0.00</ixy>
@@ -38,8 +39,8 @@
         <surface>
           <friction>
             <ode>
-              <mu>10</mu>
-              <mu2>10</mu2>
+              <mu>20</mu>
+              <mu2>20</mu2>
               <fdir1>0 0 0</fdir1>
               <slip1>0</slip1>
               <slip2>0</slip2>
