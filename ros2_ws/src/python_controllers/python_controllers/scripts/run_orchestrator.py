@@ -169,7 +169,7 @@ if __name__ == "__main__":
     parser.add_argument("--num_robots", type=int, default=5)
 
     # Each robot starts with a job, how many extras do we want to assign the system?
-    parser.add_argument("--requests_to_make", type=int, default=5)
+    parser.add_argument("--requests_to_make", type=int, default=0)
     parser.add_argument("--debug", type=bool, default=False)
     parser.add_argument("--save_orch_output", type=bool, default=False)
     parser.add_argument("--sim", type=bool, default=False)
