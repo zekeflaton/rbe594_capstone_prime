@@ -83,11 +83,9 @@ def main(num_robots, requests_to_make, DEBUG=False, save_orch_output=False, sim=
             r4 = o.robots["3"]
         if "4" in o.robots:
             r5 = o.robots["4"]
-        # shelf_tasks = ["A4", "D6", "C2", "B6", "D1"]
-        shelf_tasks = ["A4"]
+        shelf_tasks = ["A4", "D6", "C2", "B6", "D1"]
         # -4, -4 to 5, 3
-        # drop_off_locations = [(-3, -3), (-1, -3), (0, 0), (3, 3), (0, 1)]
-        drop_off_locations = [(-3, -3)]
+        drop_off_locations = [(-3, -3), (-1, -3), (0, 0), (3, 3), (0, 1)]
         for i, r in orchestrator.robots.items():
             task = RobotTask(
                 shelf_name=shelf_tasks[int(i)],
@@ -169,7 +167,7 @@ if __name__ == "__main__":
     parser.add_argument("--num_robots", type=int, default=5)
 
     # Each robot starts with a job, how many extras do we want to assign the system?
-    parser.add_argument("--requests_to_make", type=int, default=0)
+    parser.add_argument("--requests_to_make", type=int, default=5)
     parser.add_argument("--debug", type=bool, default=False)
     parser.add_argument("--save_orch_output", type=bool, default=False)
     parser.add_argument("--sim", type=bool, default=False)
