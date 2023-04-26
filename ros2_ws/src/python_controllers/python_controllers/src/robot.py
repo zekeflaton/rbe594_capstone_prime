@@ -42,7 +42,7 @@ class Robot(object):
 
     def __init__(self, robot_name, charge_locations, orchestrator, max_x, max_y, initial_pose,
                  end_pose=None, motion_planner=None, metrics_file_path=None,
-                 tags_filepath="../src/tags_file.pkl", debug=False, color=None, sim=False):
+                 tags_filepath="../src/tags_file.pkl", debug=False, color=None, sim=False, save_path_enabled=False):
         """
 
         :param str robot_name: name of the robot
@@ -97,6 +97,8 @@ class Robot(object):
                     yaw=90.,  # convert to a float, hardcode to face up
                 )
             )
+        self.actual_path = {'x':[], 'y':[], 'z':[], 'seconds':[], 'nanoseconds': []}
+        self.save_path_enabled = save_path_enabled
 
     def plan_path(self):
         """
@@ -269,6 +271,13 @@ class Robot(object):
                     print(feedback)
                     # if feedback.navigation_duration > 600:
                     #     self._nav.cancelTask()
+                    # if enabled, append the current pose to the lists
+                    if self.save_path_enabled and hasattr(feedback, 'current_pose'):
+                        self.actual_path['x'].append(feedback.current_pose.pose.position.x)
+                        self.actual_path['y'].append(feedback.current_pose.pose.position.y)
+                        self.actual_path['z'].append(feedback.current_pose.pose.position.z)
+                        self.actual_path['seconds'].append(feedback.current_pose.header.stamp.sec)
+                        self.actual_path['nanoseconds'].append(feedback.current_pose.header.stamp.nanosec)
 
                 result = self._nav.getResult()
                 print(result)

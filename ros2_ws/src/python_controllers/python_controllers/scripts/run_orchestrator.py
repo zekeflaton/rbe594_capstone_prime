@@ -1,6 +1,8 @@
 from argparse import ArgumentParser
 import glob
 from datetime import datetime
+import pandas as pd
+
 from IPython import embed
 import os
 from PIL import Image as im
@@ -13,13 +15,14 @@ from python_controllers.src.helpers import (
     Pose,
     RobotTask,
     ensure_filepath_exists,
-    time_format
+    time_format,
+    create_pose_stamped,
 )
 from python_controllers.src.shelf_locations import shelves
 from python_controllers.src.tag_locations import tags
 
 
-def main(num_robots, requests_to_make, DEBUG=False, save_orch_output=False, sim=False):
+def main(num_robots, requests_to_make, DEBUG=False, save_orch_output=False, sim=False, ACTUAL_PATH_DIR=None):
     """
 
     :param int num_robots: number of robots to use
@@ -50,6 +53,7 @@ def main(num_robots, requests_to_make, DEBUG=False, save_orch_output=False, sim=
         warehouse_png_output_filepath=warehouse_png_output_filepath,
         orch_output_filepath=orch_output_filepath,
         extra_random_requests_to_make=requests_to_make,
+        actual_path_dir=ACTUAL_PATH_DIR,
     )
 
     if num_robots > len(charge_locations):
@@ -142,6 +146,9 @@ def main(num_robots, requests_to_make, DEBUG=False, save_orch_output=False, sim=
             # Write the move cycle total + 1 task for eac
             f.write(",".join([str(requests_to_make+num_robots), str(o.move_cycle)])+"\n")
 
+        file_path = os.path.join(orchestrator.actual_path_dir, str(r.robot_name) + '.csv')
+        df = pd.DataFrame(r.actual_path)
+        df.to_csv(file_path)
     else:
         # loop until all robots are done
         while not orchestrator.are_all_robots_at_home_without_task():
@@ -171,6 +178,7 @@ if __name__ == "__main__":
     parser.add_argument("--debug", type=bool, default=False)
     parser.add_argument("--save_orch_output", type=bool, default=False)
     parser.add_argument("--sim", type=bool, default=False)
+    parser.add_argument("--actual_path_dir", type=str, default=None)
 
     args = parser.parse_args()
 
@@ -179,7 +187,8 @@ if __name__ == "__main__":
         requests_to_make=args.requests_to_make,
         DEBUG=args.debug,
         save_orch_output=args.save_orch_output,
-        sim=args.sim
+        sim=args.sim,
+        ACTUAL_PATH_DIR=args.actual_path_dir
     )
 
 
@@ -189,3 +198,6 @@ if __name__ == "__main__":
 #     print(r.end_pose)
 #     print(r._path)
 #     print((r.current_pose == r.charge_locations[int(r_name)]) and not r._current_task)
+
+
+# r._path = [(0., -3., 90), (0., 3., 90), (0., 3., 270), (0., -3., 270)]
