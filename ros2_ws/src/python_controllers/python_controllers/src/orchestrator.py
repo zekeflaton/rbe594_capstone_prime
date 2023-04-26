@@ -6,6 +6,7 @@ from datetime import datetime
 from IPython import embed
 
 import rclpy
+import os
 from python_controllers.src.robot import Robot
 from python_controllers.src.helpers import (
     BatteryCharge,
@@ -15,6 +16,7 @@ from python_controllers.src.helpers import (
     time_format
 )
 from python_controllers.src.tag_locations import tags
+import pandas as pd
 
 
 class Orchestrator(object):
@@ -30,7 +32,8 @@ class Orchestrator(object):
                  warehouse_png_output_filepath=None,
                  orch_output_filepath=None,
                  sim=False,
-                 extra_random_requests_to_make=0
+                 extra_random_requests_to_make=0,
+                 actual_path_dir=None,
                  ):
         """
         Initialize the orchestrator
@@ -81,6 +84,12 @@ class Orchestrator(object):
         # Lock the 4 corners around the shelves to prevent the motion planners from using those points where the legs sit
         self.locked_shelves = set()  # Tuple(x, y) of all locked shelf locations
         self.reset_shelf_leg_locks()
+
+        # save the actual robot paths to a directory
+        if os.path.exists(actual_path_dir):
+            self.actual_path_dir = actual_path_dir
+        else:
+            self.actual_path_dir = None
 
         rclpy.init()
 
@@ -244,6 +253,7 @@ class Orchestrator(object):
             debug=self.debug,
             color=color,
             sim=self.sim,
+            save_path_enabled=self.actual_path_dir is not None
         )
         self.waiting_robots.add(robot_name)
         return self.robots[robot_name]
@@ -293,6 +303,17 @@ class Orchestrator(object):
             # Once an available path has been found, reserve the first and second pts for this robot
             self.lock_cells(robot, first, second)
             robot.move_robot(self.sim)
+
+            # if enabled, save the actual path to a csv file
+            if robot.is_done() and self.actual_path_dir is not None:
+                df = pd.DataFrame(robot.actual_path)
+                file_path = os.path.join(self.actual_path_dir, id, '.csv')
+                if os.path.exists(file_path):
+                    df.to_csv(file_path, mode='a', header=False)
+                else:
+                    df.to_csv(file_path)
+                for col in robot.actual_path:
+                    robot.actual_path[col].clear()
 
             if robot.is_done() and (self.request_queue or self.extra_random_requests):
 
