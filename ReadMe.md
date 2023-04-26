@@ -44,6 +44,9 @@ the gazebo map loads correctly
 3. ros2 launch warehouse_robot navigation_launch.py use_sim_time:=true map_subscribe_transient_local:=true
 4. rviz2 -d ./src/warehouse_robot/config/main.rviz
 
+Run steps 2-4 at once with this command
+`ros2 launch warehouse_robot nav_and_local.launch.py`
+
 Install required packages using `install_packages.bash`
 
 To control the robot and move it around the environment in the environment, run this command to start keyboard control
