@@ -389,6 +389,7 @@ ros-humble-visualization-msgs \
 ros-humble-xacro \
 ros-humble-yaml-cpp-vendor \
 ros-humble-zstd-vendor \
+ros-humble-apriltag-ros \
 python3-pip
 
 # for good measure, install python dependencies

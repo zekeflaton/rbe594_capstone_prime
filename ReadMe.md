@@ -55,3 +55,11 @@ To move the piston up and down, run this command with `0.2` for up and `0.0` for
 ros2 topic pub -1 /piston_vel_cont/commands std_msgs/msg/Float64MultiArray "data:
 > - 0.2"
 ```
+ros2 launch warehouse_robot launch_sim.launch.py world:=./src/warehouse_robot/worlds/warehouse_with_apriltag.world use_sim_time:=true### For April Tag Detection
+1. go to ros2_ws folder structure and run colcon build
+2. run in one terminal --> $`ros2 run apriltag_ros apriltag_node --ros-args     -r image_rect:=/camera/image_raw     -r camera_info:=/camera/camera_info`
+3. The above instruction publishes the detection output in the topic /detections
+4. Run  the following command in a different terminal.
+    ros2 launch warehouse_robot launch_sim.launch.py world:=./src/warehouse_robot/worlds/warehouse_with_apriltag.world use_sim_time:=true
+5. Go to folder ~/rbe594_capstone_prime/ros2_ws/src/python_controllers/python_controllers/scripts
+6. run $`python3 robot_controller_test.py`
