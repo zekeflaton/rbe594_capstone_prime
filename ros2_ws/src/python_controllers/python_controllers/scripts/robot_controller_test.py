@@ -181,21 +181,21 @@ def main(args=None):
 	yaw = calculate_yaw_from_rotation(robot_location[:3,:3])
 	print("yaw in rad: ",yaw)
 	print("Robot Position X,Y in meters : \n",robot_location[:2,3])
-	orch = Orchestrator(
-		shelves=[],
-		size=(9, 7),
-	)
-	initial_pose = (0, -2, 90)
-	end_pose = (0, 2, 270)
+	# orch = Orchestrator(
+	# 	shelves=[],
+	# 	size=(9, 7),
+	# )
+	# initial_pose = (0, -2, 90)
+	# end_pose = (0, 2, 270)
+	#
+	# orch.add_robot(
+	# 	robot_name="robot1",
+	# 	initial_pose=initial_pose,
+	# 	end_pose=end_pose
+	# )
 
-	orch.add_robot(
-		robot_name="robot1",
-		initial_pose=initial_pose,
-		end_pose=end_pose
-	)
-
-	robot1 = orch.robots["robot1"]
-	nav = robot1._nav
+	# robot1 = orch.robots["robot1"]
+	# nav = robot1._nav
 
 	embed()
 
