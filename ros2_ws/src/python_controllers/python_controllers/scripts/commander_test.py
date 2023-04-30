@@ -80,3 +80,4 @@ for pose in poses:
 
 result = nav.getResult()
 print(result)
+embed()

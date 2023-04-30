@@ -13,8 +13,8 @@
                     <format>R8G8B8</format>
                 </image>
                 <clip>
-                    <near>0.02</near>
-                    <far>300</far>
+                    <near>0.01</near>
+                    <far>500</far>
                 </clip>
                 <!-- <noise>
                     <type>gaussian</type>
@@ -24,11 +24,11 @@
                 </noise> -->
             </camera>
             <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
-                <!-- <alwaysOn>true</alwaysOn> -->
+                <alwaysOn>true</alwaysOn>
                 <!-- <updateRate>0.0</updateRate> -->
-                <!-- <cameraName>my_robot/camera1</cameraName> -->
-                <!-- <imageTopicName>image_raw</imageTopicName> -->
-                <!-- <cameraInfoTopicName>camera_info</cameraInfoTopicName> -->
+                <cameraName>camera</cameraName>
+                <imageTopicName>image_raw</imageTopicName>
+                <cameraInfoTopicName>camera_info</cameraInfoTopicName>
                 <frameName>camera_link_optical</frameName>
                 <!-- <hackBaseline>0.07</hackBaseline> -->
                 <!-- <distortionK1>0.0</distortionK1> -->
@@ -43,7 +43,7 @@
     <joint name="camera_joint" type="fixed">
         <parent link="base_link" />
         <child link="camera_link" />
-        <origin rpy="0 1.57 0" xyz="0 0 0.0367" />
+        <origin rpy="0 1.57 0" xyz="0 0 0.045" />
     </joint>
 
     <joint name="camera_optical_joint" type="fixed">
